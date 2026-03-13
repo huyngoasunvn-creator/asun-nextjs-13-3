@@ -107,6 +107,14 @@ const CouponIncentive: React.FC<{ product: Product, coupons: Coupon[] }> = ({ pr
 };
 
 const ProductList: React.FC = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
+useEffect(() => {
+  const check = () => setIsMobile(window.innerWidth < 768);
+  check();
+  window.addEventListener("resize", check);
+  return () => window.removeEventListener("resize", check);
+}, []);
   const { 
     products, addToCart, wishlist, toggleWishlist, banners, searchQuery, 
     activeCategory, setActiveCategory, selectedBrand, setSelectedBrand, 
@@ -605,7 +613,9 @@ const ProductList: React.FC = () => {
         <div className="space-y-8 py-4">
           {sortedVisibleCategories.map(conf => {
             const cat = conf.category;
-            const catProducts = products.filter(p => !p.isHidden && p.category === cat).slice(0, 5);
+            const catProducts = products
+  .filter(p => !p.isHidden && p.category === cat)
+  .slice(0, isMobile ? 6 : 5);
             if (catProducts.length === 0) return null;
             const theme = categoryThemes.find(t => t.category === cat) || { image: '', color: 'from-slate-600', slogan: 'Khám phá ngay', accentClass: 'text-slate-800', bgClass: 'bg-slate-50' };
             return (
