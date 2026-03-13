@@ -1,3 +1,0 @@
-module.exports=[50903,a=>{"use strict";function b(a){if(!a)return"";let b=a.split("-");if(b.length<1)return"";let c=b[b.length-1];return"p"===(b.length>=2?b[b.length-2]:null)&&/^\d+$/.test(c)?`p-${c}`:c}a.s(["createSlug",0,(a,b)=>{if(!a)return b;let c=a.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d").replace(/Đ/g,"D").toLowerCase().replace(/[^a-z0-9\s-]/g,"").replace(/\s+/g,"-").replace(/-+/g,"-").trim();return`${c}-${b}`},"getIdFromSlug",()=>b])}];
-
-//# sourceMappingURL=utils_seo_ts_40a56007._.js.map
