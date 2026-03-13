@@ -16,8 +16,10 @@ const merriweather = Merriweather({
   variable: "--font-serif",
 });
 
+const baseUrl = "https://asun.vn";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://asun.vn"),
+  metadataBase: new URL(baseUrl),
 
   title: {
     default: "Asun Việt Nam - Hệ thống điện máy cao cấp",
@@ -37,27 +39,40 @@ export const metadata: Metadata = {
 
   authors: [{ name: "Asun Việt Nam" }],
 
+  robots: {
+    index: true,
+    follow: true
+  },
+
+  alternates: {
+    canonical: baseUrl
+  },
+
   openGraph: {
     type: "website",
     locale: "vi_VN",
-    url: "https://asun.vn",
+    url: baseUrl,
     siteName: "Asun Việt Nam",
     title: "Asun Việt Nam - Hệ thống điện máy cao cấp",
     description:
-      "Hệ thống thương mại điện tử điện máy cao cấp tích hợp AI.",
+      "Hệ thống thương mại điện tử điện máy cao cấp. Sản phẩm chính hãng, giá tốt.",
     images: [
       {
         url: "https://w.ladicdn.com/664194bb278fae0012c9fcfa/29366248_1941804405829698_8259729440334938112_n-20240731043727-n5eo-.png",
         width: 1200,
-        height: 630
+        height: 630,
+        alt: "Asun Việt Nam"
       }
     ]
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "Asun Việt Nam",
-    description: "Hệ thống điện máy cao cấp",
+    title: "Asun Việt Nam - Hệ thống điện máy cao cấp",
+    description: "Hệ thống thương mại điện tử điện máy cao cấp",
+    images: [
+      "https://w.ladicdn.com/664194bb278fae0012c9fcfa/29366248_1941804405829698_8259729440334938112_n-20240731043727-n5eo-.png"
+    ]
   },
 
   icons: {
@@ -70,14 +85,53 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Asun Việt Nam",
+    url: baseUrl,
+    logo:
+      "https://w.ladicdn.com/664194bb278fae0012c9fcfa/29366248_1941804405829698_8259729440334938112_n-20240731043727-n5eo-.png"
+  };
+
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Asun Việt Nam",
+    url: baseUrl,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${baseUrl}/search?q={search_term_string}`,
+      "query-input": "required name=search_term_string"
+    }
+  };
+
   return (
     <html lang="vi">
       <body className={`${inter.variable} ${merriweather.variable} antialiased`}>
+        
+        {/* Schema SEO */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationSchema)
+          }}
+        />
+
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(websiteSchema)
+          }}
+        />
+
         <AuthProvider>
           <AppProvider>
             <ClientLayout>{children}</ClientLayout>
           </AppProvider>
         </AuthProvider>
+
       </body>
     </html>
   );

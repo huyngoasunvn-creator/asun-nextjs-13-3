@@ -1,12 +1,82 @@
 import type { Metadata } from "next";
 import ProductList from "@/components/ProductList";
 
+const baseUrl =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://asun.vn";
+
 export const metadata: Metadata = {
-  title: "Trang chủ",
+
+  title: "Asun Việt Nam | Điện máy chính hãng giá tốt",
+  
   description:
-    "Mua sắm điện máy cao cấp tại Asun Việt Nam. Giá tốt, khuyến mãi mỗi ngày."
+    "Asun Việt Nam chuyên cung cấp điện máy chính hãng, giá tốt, nhiều khuyến mãi hấp dẫn. Giao hàng toàn quốc.",
+
+  keywords: [
+    "Asun Việt Nam",
+    "điện máy",
+    "mua điện máy",
+    "điện máy chính hãng",
+    "thiết bị điện tử"
+  ],
+
+  robots: {
+    index: true,
+    follow: true
+  },
+
+  alternates: {
+    canonical: baseUrl
+  },
+
+  openGraph: {
+    title: "Asun Việt Nam | Điện máy chính hãng giá tốt",
+    description:
+      "Asun Việt Nam chuyên cung cấp điện máy chính hãng, giá tốt, nhiều khuyến mãi hấp dẫn.",
+    url: baseUrl,
+    siteName: "Asun Việt Nam",
+
+    images: [
+      {
+        url: `${baseUrl}/logo.png`,
+        width: 1200,
+        height: 630,
+        alt: "Asun Việt Nam"
+      }
+    ],
+
+    locale: "vi_VN",
+    type: "website"
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "Asun Việt Nam | Điện máy chính hãng",
+    description:
+      "Asun Việt Nam chuyên cung cấp điện máy chính hãng giá tốt.",
+    images: [`${baseUrl}/logo.png`]
+  }
 };
 
 export default function Home() {
-  return <ProductList />;
+
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Asun Việt Nam",
+    url: baseUrl,
+    logo: `${baseUrl}/logo.png`
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(schema)
+        }}
+      />
+
+      <ProductList />
+    </>
+  );
 }

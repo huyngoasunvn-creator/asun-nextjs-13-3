@@ -28,8 +28,10 @@ const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
 };
 
 const ProductDetail: React.FC<{ initialProduct: Product }> = ({ initialProduct }) => {
+  
   const params = useParams();
   const slug = params?.slug as string;
+  
   const id = getIdFromSlug(slug);
   const router = useRouter();
   const { products, addToCart, wishlist, toggleWishlist, commitments, setSelectedBrand, setActiveCategory, setSearchQuery, setAlertProduct, reviews } = useApp();
@@ -50,6 +52,30 @@ const ProductDetail: React.FC<{ initialProduct: Product }> = ({ initialProduct }
   const thumbnailContainerRef = useRef<HTMLDivElement>(null);
 
   const product = initialProduct || products.find(p => p.id === id) || null;
+  const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    {
+      "@type": "ListItem",
+      position: 1,
+      name: "Trang chủ",
+      item: "https://asun.vn"
+    },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "Sản phẩm",
+      item: "https://asun.vn/product"
+    },
+    {
+      "@type": "ListItem",
+      position: 3,
+      name: product?.name || "",
+      item: `https://asun.vn/product/${slug}`
+    }
+  ]
+};
 
   // --- LOGIC SEO & STRUCTURED DATA ---
   const now = useMemo(() => new Date(), []);
@@ -252,6 +278,23 @@ const ProductDetail: React.FC<{ initialProduct: Product }> = ({ initialProduct }
   }, [product.videoUrls, product.videoUrl]);
 
   return (
+    <>
+  {schemaData && (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify(schemaData)
+      }}
+    />
+  )}
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify(breadcrumbSchema)
+    }}
+  />
+
+  
     <div className="max-w-7xl mx-auto space-y-6 pb-24 px-4 md:px-0">
       <nav className="flex items-center gap-2 text-[10px] md:text-[11px] font-black uppercase tracking-widest text-slate-400 py-4 border-b border-slate-100 overflow-x-auto no-scrollbar whitespace-nowrap">
         <Link href="/" onClick={() => {setSelectedBrand(null); setActiveCategory('Tất cả'); setSearchQuery('');}} className="hover:text-[#ee4d2d] transition-colors">Trang chủ</Link>
@@ -552,6 +595,7 @@ const ProductDetail: React.FC<{ initialProduct: Product }> = ({ initialProduct }
         </div>
       )}
     </div>
+    </>
   );
 };
 
