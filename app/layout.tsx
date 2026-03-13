@@ -51,7 +51,6 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "vi_VN",
-    url: baseUrl,
     siteName: "Asun Việt Nam",
     title: "Asun Việt Nam - Hệ thống điện máy cao cấp",
     description:

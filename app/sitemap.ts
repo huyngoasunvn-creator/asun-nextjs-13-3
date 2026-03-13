@@ -40,10 +40,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         const data: any = doc.data();
 
         const slug =
-          data.slug ||
-          `${data.name?.toLowerCase()
-            ?.replace(/[^a-z0-9\s-]/g, "")
-            ?.replace(/\s+/g, "-")}-p-${doc.id}`;
+  data.slug ||
+  `${data.name
+    ?.normalize("NFD")
+    ?.replace(/[\u0300-\u036f]/g, "")
+    ?.toLowerCase()
+    ?.replace(/[^a-z0-9\s-]/g, "")
+    ?.replace(/\s+/g, "-")}-p-${doc.id}`;
 
         return {
           url: `${baseUrl}/product/${slug}`,
