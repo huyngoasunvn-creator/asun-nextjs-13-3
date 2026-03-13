@@ -66,11 +66,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     cleanDesc.slice(0, 160) ||
     `Mua ${product.name} chính hãng tại Asun Việt Nam`;
 
-  const image = product.images?.[0] || "/logo.png";
+  const image = product.images?.[0]
+  ? product.images[0].startsWith("http")
+    ? product.images[0]
+    : `${baseUrl}${product.images[0]}`
+  : `${baseUrl}/logo.png`;
 
   const url = `${baseUrl}/product/${slug}`;
 
   return {
+    metadataBase: new URL(baseUrl),
 
     title,
     description,
@@ -92,21 +97,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
 
     openGraph: {
-      title,
-      description,
-      url,
-      siteName: "Asun Việt Nam",
-      images: [
-        {
-          url: image,
-          width: 1200,
-          height: 630,
-          alt: product.name
-        }
-      ],
-      locale: "vi_VN",
-      type: "website"
-    },
+  title,
+  description,
+  url,
+  siteName: "Asun Việt Nam",
+
+  images: [
+    {
+      url: image,
+      width: 1200,
+      height: 630,
+      alt: product.name
+    }
+  ],
+
+  locale: "vi_VN",
+  type: "website"
+},
 
     twitter: {
       card: "summary_large_image",
