@@ -108,9 +108,16 @@ export default function RootLayout({
 
   return (
     <html lang="vi">
+      <head>
+        {/* Font Awesome */}
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        />
+      </head>
+
       <body className={`${inter.variable} ${merriweather.variable} antialiased`}>
         
-        {/* Schema SEO */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

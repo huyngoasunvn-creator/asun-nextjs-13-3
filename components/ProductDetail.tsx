@@ -39,6 +39,7 @@ const ProductDetail: React.FC<{ initialProduct: Product }> = ({ initialProduct }
   const [selectedImageIdx, setSelectedImageIdx] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxImageOverride, setLightboxImageOverride] = useState<string | null>(null);
+  const [reviewImages, setReviewImages] = useState<string[]>([]);
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [isDescExpanded, setIsDescExpanded] = useState(false);
   const [showSeeMore, setShowSeeMore] = useState(false);
@@ -96,6 +97,10 @@ const ProductDetail: React.FC<{ initialProduct: Product }> = ({ initialProduct }
     product?.seoDescription || `Mua ${product?.name} tại Asun.vn. Giá cực tốt: ${currentPrice.toLocaleString()}đ. Bảo hành ${product?.warrantyMonths} tháng, cam kết chính hãng 100%.`,
   [product, currentPrice]);
 
+  const productReviews = useMemo(() => {
+  return reviews.filter(r => r.productId === `p-${id}`);
+}, [reviews, id]);
+
   const schemaData = useMemo(() => {
     if (!product) return null;
     return {
@@ -121,7 +126,7 @@ const ProductDetail: React.FC<{ initialProduct: Product }> = ({ initialProduct }
         "ratingValue": product.rating || 5,
         "bestRating": "5",
         "worstRating": "1",
-        "ratingCount": reviews.filter(r => r.productId === product.id).length || 1
+        ratingCount: productReviews.length || 1
       }
     };
   }, [product, reviews, currentPrice]);
@@ -171,26 +176,37 @@ const ProductDetail: React.FC<{ initialProduct: Product }> = ({ initialProduct }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isLightboxOpen, selectedImageIdx]);
+  }, [isLightboxOpen, selectedImageIdx, reviewImages]);
 
   const nextImage = (e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    if (!product) return;
-    if (lightboxImageOverride) return; 
-    setSelectedImageIdx((prev) => (prev + 1) % product.images.length);
-  };
+  if (e) e.stopPropagation();
 
-  const prevImage = (e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    if (!product) return;
-    if (lightboxImageOverride) return;
-    setSelectedImageIdx((prev) => (prev - 1 + product.images.length) % product.images.length);
-  };
+  const images =
+    reviewImages.length > 0
+      ? reviewImages
+      : product?.images || [];
 
-  const productReviews = useMemo(() => {
-    return reviews.filter(r => r.productId === id);
-  }, [reviews, id]);
+  if (images.length === 0) return;
 
+  setSelectedImageIdx((prev) => (prev + 1) % images.length);
+};
+
+const prevImage = (e?: React.MouseEvent) => {
+  if (e) e.stopPropagation();
+
+  const images =
+    reviewImages.length > 0
+      ? reviewImages
+      : product?.images || [];
+
+  if (images.length === 0) return;
+
+  setSelectedImageIdx((prev) =>
+    (prev - 1 + images.length) % images.length
+  );
+};
+
+  
   const ratingStats = useMemo(() => {
     const stats = [0, 0, 0, 0, 0];
     productReviews.forEach(r => {
@@ -545,9 +561,78 @@ const ProductDetail: React.FC<{ initialProduct: Product }> = ({ initialProduct }
                                          {new Date(review.createdAt).toLocaleDateString('vi-VN')}
                                       </span>
                                    </div>
-                                   <p className="text-sm text-slate-600 leading-relaxed italic">"{review.comment || 'Khách hàng không để lại nội dung.'}"</p>
+                                   <p className="text-sm text-slate-600 leading-relaxed italic">
+  "{review.comment || 'Khách hàng không để lại nội dung.'}"
+</p>
+
+{review.images && review.images.length > 0 && (
+  <div className="flex gap-2 mt-3 flex-wrap">
+    {review.images.map((img: string, idx: number) => (
+      <img
+        key={idx}
+        src={img}
+        alt="review image"
+        className="w-20 h-20 object-cover rounded border cursor-zoom-in hover:scale-105 transition"
+        onClick={() => {
+  setReviewImages(review.images || [])
+  setSelectedImageIdx(idx)
+  setLightboxImageOverride(null)
+  setIsLightboxOpen(true)
+}}
+      />
+    ))}
+  </div>
+)}
                                 </div>
                               ))}
+                              {filteredReviews.length > REVIEWS_PER_PAGE && (
+  <div className="flex justify-center items-center gap-2 pt-6">
+    
+    <button
+      onClick={() => setReviewPage(p => Math.max(1, p - 1))}
+      disabled={reviewPage === 1}
+      className="px-3 py-1 border text-xs font-bold disabled:opacity-40"
+    >
+      <i className="fa-solid fa-chevron-left"></i>
+    </button>
+
+    {Array.from(
+      { length: Math.ceil(filteredReviews.length / REVIEWS_PER_PAGE) },
+      (_, i) => i + 1
+    ).map(page => (
+      <button
+        key={page}
+        onClick={() => setReviewPage(page)}
+        className={`px-3 py-1 border text-xs font-bold ${
+          page === reviewPage
+            ? "bg-[#ee4d2d] text-white border-[#ee4d2d]"
+            : "hover:bg-slate-100"
+        }`}
+      >
+        {page}
+      </button>
+    ))}
+
+    <button
+      onClick={() =>
+        setReviewPage(p =>
+          Math.min(
+            Math.ceil(filteredReviews.length / REVIEWS_PER_PAGE),
+            p + 1
+          )
+        )
+      }
+      disabled={
+        reviewPage ===
+        Math.ceil(filteredReviews.length / REVIEWS_PER_PAGE)
+      }
+      className="px-3 py-1 border text-xs font-bold disabled:opacity-40"
+    >
+      <i className="fa-solid fa-chevron-right"></i>
+    </button>
+
+  </div>
+)}
                             </div>
                           )}
                        </div>
@@ -585,13 +670,20 @@ const ProductDetail: React.FC<{ initialProduct: Product }> = ({ initialProduct }
       {isLightboxOpen && (
         <div className="fixed inset-0 z-[200] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300" onClick={() => { setIsLightboxOpen(false); setLightboxImageOverride(null); }}>
           <button className="absolute top-6 right-6 text-white text-4xl hover:text-[#ee4d2d] transition-colors"><i className="fa-solid fa-xmark"></i></button>
-          {!lightboxImageOverride && product.images.length > 1 && (
+          {!lightboxImageOverride &&
+  (reviewImages.length > 1 || product.images.length > 1) && (
             <>
               <button onClick={prevImage} className="absolute left-6 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white/10 text-white hover:bg-[#ee4d2d] transition-all flex items-center justify-center shadow-lg"><i className="fa-solid fa-chevron-left text-2xl"></i></button>
               <button onClick={nextImage} className="absolute right-6 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white/10 text-white hover:bg-[#ee4d2d] transition-all flex items-center justify-center shadow-lg"><i className="fa-solid fa-chevron-right text-2xl"></i></button>
             </>
           )}
-          <img src={lightboxImageOverride || product.images[selectedImageIdx]} className="max-w-full max-h-[90vh] object-contain animate-in zoom-in-95 duration-500 shadow-2xl rounded-sm" onClick={e => e.stopPropagation()} alt="Zoomed view" />
+          <img
+src={
+  lightboxImageOverride ||
+  (reviewImages.length > 0
+    ? reviewImages[selectedImageIdx]
+    : product.images[selectedImageIdx])
+} className="max-w-full max-h-[90vh] object-contain animate-in zoom-in-95 duration-500 shadow-2xl rounded-sm" onClick={e => e.stopPropagation()} alt="Zoomed view" />
         </div>
       )}
     </div>
