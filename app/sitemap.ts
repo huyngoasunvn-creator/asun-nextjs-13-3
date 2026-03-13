@@ -2,18 +2,26 @@ import { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
 
+  const baseUrl = "https://asun.vn";
+
   return [
     {
-      url: "https://asun.vn",
+      url: baseUrl,
       lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 1,
     },
     {
-      url: "https://asun.vn/blog",
+      url: `${baseUrl}/blog`,
       lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.9,
     },
     {
-      url: "https://asun.vn/product",
+      url: `${baseUrl}/product`,
       lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.9,
     }
   ];
 }
