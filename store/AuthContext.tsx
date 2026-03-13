@@ -9,7 +9,7 @@ import {
 } from "firebase/auth";
 // Importing User type separately to ensure compatibility in some TS environments
 import type { User } from "firebase/auth";
-import { auth } from "../services/firebase";
+import { auth } from "../services/firebaseClient";
 
 interface AuthContextType {
   user: User | null;

@@ -8,7 +8,7 @@ import {
   createUserWithEmailAndPassword, 
   updateProfile 
 } from "firebase/auth";
-import { auth } from "../services/firebase";
+import { auth } from "../services/firebaseClient";
 
 interface AuthModalProps {
   isOpen: boolean;

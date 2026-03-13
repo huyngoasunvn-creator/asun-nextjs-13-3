@@ -27,7 +27,7 @@ const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
   );
 };
 
-const ProductDetail: React.FC = () => {
+const ProductDetail: React.FC<{ initialProduct: Product }> = ({ initialProduct }) => {
   const params = useParams();
   const slug = params?.slug as string;
   const id = getIdFromSlug(slug);
@@ -49,7 +49,7 @@ const ProductDetail: React.FC = () => {
   const descRef = useRef<HTMLDivElement>(null);
   const thumbnailContainerRef = useRef<HTMLDivElement>(null);
 
-  const product = products.find(p => p.id === id);
+  const product = initialProduct || products.find(p => p.id === id) || null;
 
   // --- LOGIC SEO & STRUCTURED DATA ---
   const now = useMemo(() => new Date(), []);
@@ -83,7 +83,7 @@ const ProductDetail: React.FC = () => {
       "mpn": product.id,
       "offers": {
         "@type": "Offer",
-        "url": window.location.href,
+        "url": typeof window !== "undefined" ? window.location.href : "",
         "priceCurrency": "VND",
         "price": currentPrice,
         "priceValidUntil": "2026-12-31",

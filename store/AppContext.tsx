@@ -19,7 +19,7 @@ import {
   getDocsFromCache,
   getDocsFromServer
 } from "firebase/firestore";
-import { db } from "../services/firebase";
+import { db } from "../services/firebaseClient";
 import { useAuth } from "./AuthContext";
 import { 
   Product, CartItem, Order, Category, Banner, AppConfig, Brand, 
