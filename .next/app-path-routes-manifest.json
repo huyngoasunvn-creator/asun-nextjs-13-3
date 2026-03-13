@@ -1,0 +1,17 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/admin/page": "/admin",
+  "/blog/[slug]/page": "/blog/[slug]",
+  "/blog/page": "/blog",
+  "/checkout/page": "/checkout",
+  "/flash-sales/page": "/flash-sales",
+  "/orders/page": "/orders",
+  "/p/[slug]/page": "/p/[slug]",
+  "/page": "/",
+  "/product/[slug]/page": "/product/[slug]",
+  "/promotions/page": "/promotions",
+  "/shock-sales/page": "/shock-sales",
+  "/sitemap.xml/route": "/sitemap.xml",
+  "/wishlist/page": "/wishlist"
+}
