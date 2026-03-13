@@ -2,46 +2,27 @@ import { Metadata } from "next";
 import ProductDetail from "@/components/ProductDetail";
 
 type Props = {
-  params?: {
-    slug?: string;
-  };
+  params: Promise<{
+    slug: string;
+  }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const { slug } = await params;
 
-  const rawSlug = slug || "";
-
-  const title = rawSlug
+  const title = slug
     .split("-p-")[0]
     .replace(/-/g, " ");
 
-  const url = `https://asun.vn/product/${rawSlug}`;
-
   return {
     title: `${title} | Asun Việt Nam`,
-    description: `Mua ${title} chính hãng tại Asun Việt Nam`,
+    description: `Chi tiết sản phẩm ${title}`,
 
     openGraph: {
-      title: title,
-      description: `Mua ${title} chính hãng`,
-      url: url,
+      title,
+      description: `Chi tiết sản phẩm ${title}`,
       type: "website",
-      images: [
-        {
-          url: "/logo.png",
-          width: 1200,
-          height: 630,
-        }
-      ]
-    },
-
-    twitter: {
-      card: "summary_large_image",
-      title: title,
-      description: `Mua ${title} chính hãng`,
-      images: ["/logo.png"]
     }
   };
 }

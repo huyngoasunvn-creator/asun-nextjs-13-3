@@ -2,18 +2,16 @@ import { Metadata } from "next";
 import BlogDetail from "@/components/BlogDetail";
 
 type Props = {
-  params?: {
-    slug?: string;
-  };
+  params: Promise<{
+    slug: string;
+  }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const { slug } = await params;
 
-  const rawSlug = slug || "";
-
-  const title = rawSlug
+  const title = slug
     .split("-blog-")[0]
     .replace(/-/g, " ");
 
