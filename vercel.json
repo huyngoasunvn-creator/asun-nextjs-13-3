@@ -1,0 +1,32 @@
+{
+  "rewrites": [
+    {
+      "source": "/product/:slug*",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(facebookexternalhit|zalo|telegram|twitterbot|linkedinbot)"
+        }
+      ],
+      "destination": "/api/og?path=/product/:slug*"
+    },
+    {
+      "source": "/blog/:slug*",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(facebookexternalhit|zalo|telegram|twitterbot|linkedinbot)"
+        }
+      ],
+      "destination": "/api/og?path=/blog/:slug*"
+    },
+    {
+      "source": "/((?!api|assets|.*\\.).*)",
+      "destination": "/"
+    }
+  ]
+}
+
+

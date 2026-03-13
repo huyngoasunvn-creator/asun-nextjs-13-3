@@ -1,0 +1,8 @@
+{
+  "name": "13-3 Asun Việt Nam Nextjs",
+  "description": "Hệ thống thương mại điện tử điện máy cao cấp tích hợp AI và quản trị thông minh.  MỚI NHẤT 10 6-1-2025 file BẢO LƯU HOÀN THIỆN VERCEL",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
