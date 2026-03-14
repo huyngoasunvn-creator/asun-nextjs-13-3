@@ -1,47 +1,41 @@
+import { db } from "@/services/firebaseClient";
+import { collection, getDocs } from "firebase/firestore";
+
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  try {
-    const baseUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://asun.vn";
 
-    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || "https://asun.vn";
 
-    const res = await fetch(
-      `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/blogs`
-    );
+  const snapshot = await getDocs(collection(db, "blogPosts"));
 
-    const data = await res.json();
+  const urls = snapshot.docs.map((doc) => {
 
-    const urls = (data.documents || []).map((doc: any) => {
-      const slug = doc.fields.slug?.stringValue;
+    const data = doc.data();
+    const slug = data.slug;
 
-      return `
-        <url>
-          <loc>${baseUrl}/blog/${slug}</loc>
-          <lastmod>${new Date().toISOString()}</lastmod>
-          <changefreq>weekly</changefreq>
-          <priority>0.7</priority>
-        </url>
-      `;
-    });
+    if (!slug) return "";
 
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.join("")}
-</urlset>`;
+    return `
+      <url>
+        <loc>${baseUrl}/blog/${slug}</loc>
+        <lastmod>${data.createdAt || new Date().toISOString()}</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+      </url>
+    `;
 
-    return new Response(xml, {
-      headers: {
-        "Content-Type": "application/xml",
-      },
-    });
+  });
 
-  } catch (error) {
-    console.error(error);
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+  <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    ${urls.join("")}
+  </urlset>`;
 
-    return new Response("Lỗi khi tạo sơ đồ trang web", {
-      status: 500,
-    });
-  }
+  return new Response(xml, {
+    headers: {
+      "Content-Type": "application/xml"
+    }
+  });
 }
