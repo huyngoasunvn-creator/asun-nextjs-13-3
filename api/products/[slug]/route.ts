@@ -3,8 +3,13 @@ import { db } from "@/services/firebaseClient";
 import { doc, getDoc } from "firebase/firestore";
 
 function getIdFromSlug(slug: string) {
-  const match = slug.match(/p-\d+$/);
-  return match ? match[0] : null;
+
+  const parts = slug.split("-p-")
+
+  if (parts.length < 2) return null
+
+  return `p-${parts[1]}`
+
 }
 
 export async function GET(

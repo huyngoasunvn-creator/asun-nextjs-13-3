@@ -90,7 +90,7 @@ export default function RootLayout({
         />
       </head>
 
-      <body className={`${inter.variable} ${merriweather.variable} antialiased`}>
+      <body suppressHydrationWarning className={`${inter.variable} ${merriweather.variable} antialiased`}>
         
         <script
           type="application/ld+json"
