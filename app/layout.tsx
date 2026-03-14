@@ -16,7 +16,7 @@ const merriweather = Merriweather({
   variable: "--font-serif",
 });
 
-const baseUrl = "https://asun.vn";
+const baseUrl = "https://www.asun.vn";
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
