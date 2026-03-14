@@ -61,8 +61,12 @@ export const metadata: Metadata = {
 },
 
   twitter: {
-    card: "summary_large_image"
-  }
+  card: "summary_large_image",
+  title: "Asun Việt Nam - Hệ thống điện máy cao cấp",
+  description:
+    "Asun Việt Nam - Hệ thống thương mại điện tử điện máy cao cấp. Sản phẩm chính hãng, giá tốt, giao hàng toàn quốc.",
+  images: [`${baseUrl}/share.jpg`]
+}
 };
 
 export default function RootLayout({
