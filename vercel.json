@@ -23,10 +23,8 @@
       "destination": "/api/og?path=/blog/:slug*"
     },
     {
-      "source": "/((?!api|assets|.*\\.).*)",
-      "destination": "/"
+      "source": "/((?!api|_next|assets|.*\\..*).*)",
+      "destination": "/$1"
     }
   ]
 }
-
-
