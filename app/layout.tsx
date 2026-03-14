@@ -37,45 +37,19 @@ export const metadata: Metadata = {
     "Asun Việt Nam"
   ],
 
-  authors: [{ name: "Asun Việt Nam" }],
-
   robots: {
     index: true,
     follow: true
-  },
-
-  alternates: {
-    canonical: baseUrl
   },
 
   openGraph: {
     type: "website",
     locale: "vi_VN",
     siteName: "Asun Việt Nam",
-    title: "Asun Việt Nam - Hệ thống điện máy cao cấp",
-    description:
-      "Hệ thống thương mại điện tử điện máy cao cấp. Sản phẩm chính hãng, giá tốt.",
-    images: [
-      {
-        url: "https://w.ladicdn.com/664194bb278fae0012c9fcfa/29366248_1941804405829698_8259729440334938112_n-20240731043727-n5eo-.png",
-        width: 1200,
-        height: 630,
-        alt: "Asun Việt Nam"
-      }
-    ]
   },
 
   twitter: {
-    card: "summary_large_image",
-    title: "Asun Việt Nam - Hệ thống điện máy cao cấp",
-    description: "Hệ thống thương mại điện tử điện máy cao cấp",
-    images: [
-      "https://w.ladicdn.com/664194bb278fae0012c9fcfa/29366248_1941804405829698_8259729440334938112_n-20240731043727-n5eo-.png"
-    ]
-  },
-
-  icons: {
-    icon: "https://w.ladicdn.com/664194bb278fae0012c9fcfa/29366248_1941804405829698_8259729440334938112_n-20240731043727-n5eo-.png",
+    card: "summary_large_image"
   }
 };
 

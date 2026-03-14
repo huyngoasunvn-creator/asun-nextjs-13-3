@@ -560,16 +560,36 @@ useEffect(() => {
                 const hasDiscount = product.originalPrice && product.originalPrice > pPrice;
                 const discountPercent = hasDiscount ? Math.round(((product.originalPrice! - pPrice) / product.originalPrice!) * 100) : 0;
                 const isInWishlist = wishlist.includes(product.id);
-                const giftActive = hasAnyPromo(product);
+                const giftActive = isGiftActive(product);
                 return (
                   <div key={product.id} className="group bg-white border border-transparent hover:border-[#ee4d2d] hover:shadow-xl transition-all duration-500 flex flex-col h-full relative overflow-hidden rounded-sm shadow-sm">
                     <Link href={`/product/${createSlug(product.name, product.id)}`} className="block relative aspect-square overflow-hidden bg-white">
                       <img src={product.images[0]} className="w-full h-full object-contain p-2 group-hover:scale-105 transition-all duration-700" />
                       <div className="absolute top-1.5 left-1.5 z-20 flex flex-col gap-1">
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex flex-wrap gap-1 max-w-[80%]">
                           {product.isShockSale ? <div className="bg-purple-600 text-white text-[8px] font-black px-1.5 py-0.5 uppercase italic rounded-sm shadow-sm">XẢ KHO</div> : <div className="bg-[#ee4d2d] text-white text-[8px] font-black px-1.5 py-0.5 uppercase italic rounded-sm shadow-sm">YÊU THÍCH</div>}
-                          {product.isFreeship && <div className="bg-emerald-600 text-white text-[8px] font-black px-1.5 py-0.5 uppercase italic rounded-sm shadow-sm flex items-center gap-1"><i className="fa-solid fa-truck-fast text-[7px]"></i> FREESHIP</div>}
-                          {giftActive && !product.isOutOfStock && <div className="bg-[#e33a89] text-white text-[8px] font-black px-1.5 py-0.5 uppercase italic rounded-sm shadow-sm flex items-center gap-1"><i className="fa-solid fa-gift text-[7px]"></i> CÓ QUÀ</div>}
+                          {product.soldCount > 1000 && !product.isOutOfStock && (
+<div className="bg-black text-white text-[8px] font-black px-1.5 py-0.5 uppercase italic rounded-sm shadow-sm">
+BÁN CHẠY
+</div>
+)}
+                          {product.isFreeship && !product.isOutOfStock && (
+<div className="bg-emerald-600 text-white text-[8px] font-black px-1.5 py-0.5 uppercase italic rounded-sm shadow-sm flex items-center gap-1">
+<i className="fa-solid fa-truck-fast text-[7px]"></i> FREESHIP
+</div>
+)}
+
+{isGiftActive(product) && !product.isOutOfStock && (
+<div className="bg-[#e33a89] text-white text-[8px] font-black px-1.5 py-0.5 uppercase italic rounded-sm shadow-sm flex items-center gap-1">
+<i className="fa-solid fa-gift text-[7px]"></i> CÓ QUÀ
+</div>
+)}
+
+{product.isShockSale && !product.isOutOfStock && (
+<div className="bg-yellow-400 text-black text-[8px] font-black px-1.5 py-0.5 uppercase italic rounded-sm shadow-sm">
+KHUYẾN MÃI
+</div>
+)}
                         </div>
                         {hasDiscount && <div className="bg-yellow-400 text-slate-900 text-[9px] font-black px-1.5 py-0.5 w-fit rounded-sm shadow-sm">-{discountPercent}%</div>}
                       </div>
@@ -631,7 +651,7 @@ useEffect(() => {
                   {catProducts.map(product => {
                     const isFS = product.flashSalePrice && product.flashSaleEnd && new Date(product.flashSaleEnd) > now && (!product.flashSaleStart || new Date(product.flashSaleStart) <= now);
                     let pPrice = product.isShockSale && product.shockSalePrice ? product.shockSalePrice : (isFS ? product.flashSalePrice! : product.price);
-                    const giftActive = hasAnyPromo(product);
+                    const giftActive = isGiftActive(product);
                     return (
                       <Link key={product.id} href={`/product/${createSlug(product.name, product.id)}`} className="group bg-white border border-slate-100 p-2.5 rounded-sm hover:shadow-lg transition-all duration-300 relative flex flex-col">
                          <div className="aspect-square w-full rounded-sm overflow-hidden mb-2 bg-slate-50 border border-slate-50 relative">

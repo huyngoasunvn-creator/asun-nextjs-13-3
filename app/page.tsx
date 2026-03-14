@@ -25,8 +25,8 @@ export const metadata: Metadata = {
   },
 
   alternates: {
-    canonical: baseUrl
-  },
+  canonical: `${baseUrl}/`
+},
 
   openGraph: {
     title: "Asun Việt Nam | Điện máy chính hãng giá tốt",

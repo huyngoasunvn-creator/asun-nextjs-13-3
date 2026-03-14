@@ -53,6 +53,16 @@ const ProductDetail: React.FC<{ initialProduct: Product }> = ({ initialProduct }
   const thumbnailContainerRef = useRef<HTMLDivElement>(null);
 
   const product = initialProduct || products.find(p => p.id === id) || null;
+  const relatedProducts = useMemo(() => {
+  if (!product) return [];
+
+  return products
+    .filter(p =>
+      p.id !== product.id &&
+      (p.category === product.category || p.brand === product.brand)
+    )
+    .slice(0, 8);
+}, [products, product]);
   const breadcrumbSchema = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
@@ -666,6 +676,110 @@ const prevImage = (e?: React.MouseEvent) => {
           </div>
         </div>
       </div>
+      {/* SẢN PHẨM LIÊN QUAN */}
+      {relatedProducts.length > 0 && (
+  <section className="mt-20">
+
+    <div className="flex items-center justify-between mb-6">
+      <h2 className="text-xl font-black uppercase tracking-wide">
+        Có thể bạn cũng quan tâm
+      </h2>
+
+      <span className="text-sm text-gray-500">
+        {relatedProducts.length} sản phẩm
+      </span>
+    </div>
+
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
+
+      {relatedProducts.map((p) => (
+  <Link
+    key={p.id}
+    href={`/product/${createSlug(p.name, p.id)}`}
+    className="group bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+  >
+
+    <div className="relative bg-gray-50 rounded-t-xl">
+
+  {/* BADGE */}
+  <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+
+  {p.isFreeship && (
+    <div className="bg-emerald-500 text-white text-[9px] font-bold px-2 py-[2px] rounded shadow">
+      FREESHIP
+    </div>
+  )}
+
+  {p.giftName && (
+    <div className="bg-pink-500 text-white text-[9px] font-bold px-2 py-[2px] rounded shadow">
+      CÓ QUÀ
+    </div>
+  )}
+
+  {p.isShockSale && (
+    <div className="bg-yellow-400 text-black text-[9px] font-bold px-2 py-[2px] rounded shadow">
+      KHUYẾN MÃI
+    </div>
+  )}
+
+  {p.soldCount > 1000 && (
+    <div className="bg-black text-white text-[9px] font-bold px-2 py-[2px] rounded shadow">
+      BÁN CHẠY
+    </div>
+  )}
+
+</div>
+
+  <div className="relative w-full h-40">
+
+  <img
+    src={p.images?.[0]}
+    alt={p.name}
+    className="absolute inset-0 w-full h-full object-contain p-3 transition-opacity duration-300 group-hover:opacity-0"
+  />
+
+  {p.images?.[1] && (
+    <img
+      src={p.images[1]}
+      alt={p.name}
+      className="absolute inset-0 w-full h-full object-contain p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+    />
+  )}
+
+</div>
+
+</div>
+<div className="text-xs text-gray-400">
+  Đã bán {p.soldCount}
+</div>
+
+    <div className="p-3">
+
+      <p className="text-sm font-medium line-clamp-2 min-h-[40px] group-hover:text-[#ee4d2d]">
+        {p.name}
+      </p>
+
+      <div className="mt-2 flex items-center justify-between">
+
+        <span className="text-[#ee4d2d] font-extrabold text-lg">
+          ₫{p.price?.toLocaleString()}
+        </span>
+
+        <span className="text-xs text-gray-400">
+          Xem
+        </span>
+
+      </div>
+
+    </div>
+
+  </Link>
+))}
+
+    </div>
+
+  </section>
+)}
 
       {isLightboxOpen && (
         <div className="fixed inset-0 z-[200] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300" onClick={() => { setIsLightboxOpen(false); setLightboxImageOverride(null); }}>

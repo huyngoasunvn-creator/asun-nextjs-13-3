@@ -9,15 +9,8 @@ type Props = {
 };
 
 function getIdFromSlug(slug: string) {
-  const parts = slug.split("-");
-  const last = parts[parts.length - 1];
-  const secondLast = parts[parts.length - 2];
-
-  if (secondLast === "p") {
-    return "p-" + last;
-  }
-
-  return last;
+  const match = slug.match(/p-\d+$/);
+  return match ? match[0] : null;
 }
 
 async function getProduct(slug?: string) {
