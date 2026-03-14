@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     "Asun Việt Nam - Hệ thống thương mại điện tử điện máy cao cấp. Sản phẩm chính hãng, giá tốt, giao hàng toàn quốc.",
   images: [
     {
-      url: `${baseUrl}/logo-share.jpg`,
+      url: `${baseUrl}/share.jpg`,
       width: 1200,
       height: 630,
       alt: "Asun Việt Nam"
