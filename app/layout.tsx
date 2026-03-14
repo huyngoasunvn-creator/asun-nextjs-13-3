@@ -43,10 +43,22 @@ export const metadata: Metadata = {
   },
 
   openGraph: {
-    type: "website",
-    locale: "vi_VN",
-    siteName: "Asun Việt Nam",
-  },
+  type: "website",
+  locale: "vi_VN",
+  siteName: "Asun Việt Nam",
+  url: baseUrl,
+  title: "Asun Việt Nam - Hệ thống điện máy cao cấp",
+  description:
+    "Asun Việt Nam - Hệ thống thương mại điện tử điện máy cao cấp. Sản phẩm chính hãng, giá tốt, giao hàng toàn quốc.",
+  images: [
+    {
+      url: "https://asun.vn/logo-share.jpg",
+      width: 1200,
+      height: 630,
+      alt: "Asun Việt Nam"
+    }
+  ]
+},
 
   twitter: {
     card: "summary_large_image"
