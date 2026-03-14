@@ -1,7 +1,3 @@
-import { NextResponse } from "next/server";
-import { db } from "@/services/firebaseClient";
-import { collection, getDocs } from "firebase/firestore";
-
 export const dynamic = "force-dynamic";
 
 export async function GET() {
@@ -9,14 +5,20 @@ export async function GET() {
     const baseUrl =
       process.env.NEXT_PUBLIC_SITE_URL || "https://asun.vn";
 
-    const snapshot = await getDocs(collection(db, "blogs"));
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 
-    const urls = snapshot.docs.map((doc) => {
-      const data: any = doc.data();
+    const res = await fetch(
+      `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/blogs`
+    );
+
+    const data = await res.json();
+
+    const urls = (data.documents || []).map((doc: any) => {
+      const slug = doc.fields.slug?.stringValue;
 
       return `
         <url>
-          <loc>${baseUrl}/blog/${data.slug}</loc>
+          <loc>${baseUrl}/blog/${slug}</loc>
           <lastmod>${new Date().toISOString()}</lastmod>
           <changefreq>weekly</changefreq>
           <priority>0.7</priority>
@@ -29,16 +31,16 @@ export async function GET() {
 ${urls.join("")}
 </urlset>`;
 
-    return new NextResponse(xml, {
+    return new Response(xml, {
       headers: {
         "Content-Type": "application/xml",
       },
     });
 
   } catch (error) {
-    console.error("SITEMAP BLOG ERROR:", error);
+    console.error(error);
 
-    return new NextResponse("Error generating sitemap", {
+    return new Response("Lỗi khi tạo sơ đồ trang web", {
       status: 500,
     });
   }
