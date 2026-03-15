@@ -6,6 +6,9 @@ import { useApp } from '../store/AppContext';
 import { useAuth } from '../store/AuthContext';
 import { Product, Category, Banner, AppConfig, Brand, Coupon, Commitment, ProductSpec, Order, CategoryTheme, StockAlert, HomePopup, ProductVariant, Review, BlogPost, CustomMenu } from '../types';
 import { generateProductDescription, generateBlogArticle } from '../services/gemini';
+import Link from "next/link";
+
+
 
 // Hàm lấy chuỗi datetime-local hiện tại (YYYY-MM-DDTHH:mm) theo giờ địa phương
 const getLocalDatetimeString = (date?: string | Date) => {
@@ -24,13 +27,17 @@ const removeAccents = (str: string) => {
     .toLowerCase();
 };
 
-const createSlug = (title: string): string => {
-  return removeAccents(title)
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
+function createSlug(text: string) {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
     .trim();
-};
+}
 
 const REVIEW_TAGS = [
   'Chất lượng tốt',
@@ -56,6 +63,7 @@ const AdminPanel: React.FC = () => {
   // States for Modals
   const [isEditing, setIsEditing] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Partial<Product>>({ images: [''], videoUrls: [''], specs: [], variants: [], videoUrl: '' });
+  const [duplicateNameWarning, setDuplicateNameWarning] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   
   // Custom Menu states
@@ -125,6 +133,8 @@ const AdminPanel: React.FC = () => {
   
   const commitmentEditorRef = useRef<HTMLDivElement>(null);
   const descriptionEditorRef = useRef<HTMLDivElement>(null);
+
+  const [duplicateProduct, setDuplicateProduct] = useState<Product | null>(null); 
 
   // Sync content cho blog editor
   useEffect(() => {
@@ -333,62 +343,95 @@ const AdminPanel: React.FC = () => {
     setIsEditing(true);
   };
 
+  const checkDuplicateProductName = (name: string) => {
+  if (!name) return;
+
+  const duplicate = products.find(
+    (p: Product) =>
+      p.name.toLowerCase().trim() === name.toLowerCase().trim() &&
+      p.id !== editingProduct?.id
+  );
+
+  if (duplicate) {
+    setDuplicateProduct(duplicate);
+  } else {
+    setDuplicateProduct(null);
+  }
+};
   const handleSaveProduct = (e: React.FormEvent) => {
-    e.preventDefault();
-    const finalDescription = descriptionEditorRef.current?.innerHTML || '';
-    
-    const finalProduct = {
-      ...editingProduct,
-      id: editingProduct.id || `p-${Date.now()}`,
-      name: editingProduct.name!,
-      brand: editingProduct.brand || 'Chưa xác định',
-      price: Number(editingProduct.price),
-      originalPrice: editingProduct.originalPrice ? Number(editingProduct.originalPrice) : undefined,
-      category: editingProduct.category || Category.SMARTPHONES,
-      images: editingProduct.images?.filter(img => img.trim() !== '') || ['https://placehold.co/600'],
-      videoUrl: editingProduct.videoUrls?.[0] || '', 
-      videoUrls: editingProduct.videoUrls?.filter(v => v.trim() !== '') || [],
-      specs: editingProduct.specs?.filter(s => s.label !== '') || [],
-      variants: editingProduct.variants?.map(v => ({
-        ...v,
-        options: v.options.map(opt => opt.trim()).filter(opt => opt !== '')
-      })).filter(v => v.label !== '' && v.options.length > 0) || [],
-      stock: Number(editingProduct.stock || 0),
-      soldCount: Number(editingProduct.soldCount || 0),
-      createdAt: editingProduct.createdAt || new Date().toISOString(),
-      rating: Number(editingProduct.rating || 5),
-      warrantyMonths: editingProduct.warrantyMonths !== undefined ? Number(editingProduct.warrantyMonths) : 0,
-      hideWarranty: editingProduct.hideWarranty || false,
-      isFreeship: editingProduct.isFreeship || false,
-      shippingFee: editingProduct.isFreeship ? 0 : Number(editingProduct.shippingFee || 0),
-      flashSalePrice: editingProduct.flashSalePrice ? Number(editingProduct.flashSalePrice) : undefined,
-      flashSaleStart: editingProduct.flashSaleStart,
-      flashSaleEnd: editingProduct.flashSaleEnd,
-      isShockSale: editingProduct.isShockSale || false,
-      shockSalePrice: editingProduct.shockSalePrice ? Number(editingProduct.shockSalePrice) : undefined,
-      giftName: editingProduct.giftName,
-      giftImage: editingProduct.giftImage,
-      giftStartDate: editingProduct.giftStartDate,
-      giftEndDate: editingProduct.giftEndDate,
-      description: finalDescription,
-      seoTitle: editingProduct.seoTitle,
-      seoDescription: editingProduct.seoDescription,
-      isHidden: editingProduct.isHidden || false,
-      isOutOfStock: editingProduct.isOutOfStock || false,
-      showCommitments: editingProduct.showCommitments || false,
-      promoBuyQty: editingProduct.promoBuyQty ? Number(editingProduct.promoBuyQty) : undefined,
-      promoGetQty: editingProduct.promoGetQty ? Number(editingProduct.promoGetQty) : undefined,
-      promoGiftName: editingProduct.promoGiftName,
-      promoGiftImage: editingProduct.promoGiftImage,
-      promoGiftProductId: editingProduct.promoGiftProductId,
-      promoStartDate: editingProduct.promoStartDate,
-      promoEndDate: editingProduct.promoEndDate
-    } as Product;
-    
-    saveProduct(finalProduct);
-    setIsEditing(false);
-    setCurrentPage(1); 
-  };
+  e.preventDefault();
+
+  const finalDescription = descriptionEditorRef.current?.innerHTML || '';
+  
+
+  const finalProduct = {
+    ...editingProduct,
+    id: editingProduct.id || `p-${Date.now()}`,
+    name: editingProduct.name!,
+    brand: editingProduct.brand || 'Chưa xác định',
+    price: Number(editingProduct.price),
+    originalPrice: editingProduct.originalPrice ? Number(editingProduct.originalPrice) : undefined,
+    category: editingProduct.category || Category.SMARTPHONES,
+    images: editingProduct.images?.filter(img => img.trim() !== '') || ['https://placehold.co/600'],
+    videoUrl: editingProduct.videoUrls?.[0] || '',
+    videoUrls: editingProduct.videoUrls?.filter(v => v.trim() !== '') || [],
+    specs: editingProduct.specs?.filter(s => s.label !== '') || [],
+    variants: editingProduct.variants?.map(v => ({
+      ...v,
+      options: v.options.map(opt => opt.trim()).filter(opt => opt !== '')
+    })).filter(v => v.label !== '' && v.options.length > 0) || [],
+    stock: Number(editingProduct.stock || 0),
+    soldCount: Number(editingProduct.soldCount || 0),
+    createdAt: editingProduct.createdAt || new Date().toISOString(),
+    rating: Number(editingProduct.rating || 5),
+    warrantyMonths: editingProduct.warrantyMonths !== undefined ? Number(editingProduct.warrantyMonths) : 0,
+    hideWarranty: editingProduct.hideWarranty || false,
+    isFreeship: editingProduct.isFreeship || false,
+    shippingFee: editingProduct.isFreeship ? 0 : Number(editingProduct.shippingFee || 0),
+    flashSalePrice: editingProduct.flashSalePrice ? Number(editingProduct.flashSalePrice) : undefined,
+    flashSaleStart: editingProduct.flashSaleStart,
+    flashSaleEnd: editingProduct.flashSaleEnd,
+    isShockSale: editingProduct.isShockSale || false,
+    shockSalePrice: editingProduct.shockSalePrice ? Number(editingProduct.shockSalePrice) : undefined,
+    giftName: editingProduct.giftName,
+    giftImage: editingProduct.giftImage,
+    giftStartDate: editingProduct.giftStartDate,
+    giftEndDate: editingProduct.giftEndDate,
+    description: finalDescription,
+    seoTitle: editingProduct.seoTitle,
+    seoDescription: editingProduct.seoDescription,
+    isHidden: editingProduct.isHidden || false,
+    isOutOfStock: editingProduct.isOutOfStock || false,
+    showCommitments: editingProduct.showCommitments || false,
+    promoBuyQty: editingProduct.promoBuyQty ? Number(editingProduct.promoBuyQty) : undefined,
+    promoGetQty: editingProduct.promoGetQty ? Number(editingProduct.promoGetQty) : undefined,
+    promoGiftName: editingProduct.promoGiftName,
+    promoGiftImage: editingProduct.promoGiftImage,
+    promoGiftProductId: editingProduct.promoGiftProductId,
+    promoStartDate: editingProduct.promoStartDate,
+    promoEndDate: editingProduct.promoEndDate
+  } as Product;
+
+  // ✅ KIỂM TRA TRÙNG TÊN
+const isDuplicate = products.some(
+  p => p.name.toLowerCase().trim() === finalProduct.name.toLowerCase().trim()
+  && p.id !== finalProduct.id
+);
+
+if (isDuplicate) {
+  const confirmSave = confirm(
+    "⚠️ Sản phẩm này đã tồn tại.\n\nBạn có muốn vẫn lưu sản phẩm không?"
+  );
+
+  if (!confirmSave) {
+    return; // ❌ không lưu, quay lại form
+  }
+}
+
+saveProduct(finalProduct);
+setIsEditing(false);
+setCurrentPage(1);
+};
 
   const handleSaveBlog = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -724,7 +767,27 @@ const AdminPanel: React.FC = () => {
                   />
                 </div>
               </div>
-              <button onClick={() => { setEditingProduct({ images: [''], videoUrls: [''], specs: [], variants: [], videoUrl: '', category: Category.SMARTPHONES, isHidden: false, isOutOfStock: false, soldCount: 0, showCommitments: false }); setIsEditing(true); }} className="w-full md:w-auto bg-[#ee4d2d] text-white px-8 py-3 rounded-sm font-black text-xs uppercase shadow-lg hover:bg-black transition-all">Thêm mới sản phẩm</button>
+<button
+  onClick={() => {
+    setDuplicateProduct(null);
+    setEditingProduct({
+      images: [''],
+      videoUrls: [''],
+      specs: [],
+      variants: [],
+      videoUrl: '',
+      category: Category.SMARTPHONES,
+      isHidden: false,
+      isOutOfStock: false,
+      soldCount: 0,
+      showCommitments: false
+    });
+    setIsEditing(true);
+  }}
+  className="w-full md:w-auto bg-[#ee4d2d] text-white px-8 py-3 rounded-sm font-black text-xs uppercase shadow-lg hover:bg-black transition-all"
+>
+  Thêm mới sản phẩm
+</button>
             </div>
             
             <div className="overflow-x-auto custom-scrollbar">
@@ -1852,7 +1915,34 @@ const AdminPanel: React.FC = () => {
                   <h3 className="text-[11px] font-black uppercase text-[#ee4d2d] border-b pb-2">Thông tin bán hàng</h3>
                   <div className="space-y-1">
                     <label className="text-[9px] font-black text-slate-400 uppercase">Tên sản phẩm *</label>
-                    <input required placeholder="Tên sản phẩm *" className="w-full p-3 bg-slate-50 border text-sm font-bold" value={editingProduct.name || ''} onChange={e => setEditingProduct({...editingProduct, name: e.target.value})} />
+                    <input
+  required
+  placeholder="Tên sản phẩm *"
+  className="w-full p-3 bg-slate-50 border text-sm font-bold"
+  value={editingProduct.name || ''}
+  onChange={e => {
+    setEditingProduct({...editingProduct, name: e.target.value})
+    setDuplicateProduct(null)   // reset cảnh báo trùng
+  }}
+  onBlur={(e) => checkDuplicateProductName(e.target.value)}
+/>
+{duplicateProduct && (
+  <div style={{ color: "red", marginTop: 5 }}>
+    ⚠️ Sản phẩm trùng:{" "}
+    <Link
+  href={`/product/${createSlug(duplicateProduct.name)}-${duplicateProduct.id}`}
+  target="_blank"
+  style={{ textDecoration: "underline", fontWeight: 600 }}
+>
+  {duplicateProduct.name}
+</Link>
+  </div>
+)}
+{duplicateNameWarning && (
+  <p className="text-red-500 text-xs mt-1">
+    {duplicateNameWarning}
+  </p>
+)}
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
