@@ -134,7 +134,7 @@ const ProductDetail: React.FC<{ initialProduct: Product }> = ({ initialProduct }
 
     offers: {
       "@type": "Offer",
-      url: `https://www.asun.vn/product/${slug}`,
+      url: `https://asun.vn/product/${slug}`,
       priceCurrency: "VND",
       price: currentPrice,
       priceValidUntil: "2026-12-31",

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import ProductList from "@/components/ProductList";
 
 const baseUrl =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.asun.vn";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://asun.vn";
 
 export const metadata: Metadata = {
 

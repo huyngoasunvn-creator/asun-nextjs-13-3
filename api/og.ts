@@ -74,7 +74,7 @@ const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/
         title,
         description,
         image,
-        url: `https://www.asun.vn${path}`,
+        url: `https://asun.vn${path}`,
       }),
       {
         headers: { 'Content-Type': 'text/html' },
