@@ -49,15 +49,7 @@ export const metadata: Metadata = {
   url: baseUrl,
   title: "Asun Việt Nam - Hệ thống điện máy cao cấp",
   description:
-    "Asun Việt Nam - Hệ thống thương mại điện tử điện máy cao cấp. Sản phẩm chính hãng, giá tốt, giao hàng toàn quốc.",
-  images: [
-    {
-      url: `${baseUrl}/share.jpg`,
-      width: 1200,
-      height: 630,
-      alt: "Asun Việt Nam"
-    }
-  ]
+    "Asun Việt Nam - Hệ thống thương mại điện tử điện máy cao cấp. Sản phẩm chính hãng, giá tốt, giao hàng toàn quốc."
 },
 
   twitter: {
