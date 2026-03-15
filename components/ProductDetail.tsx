@@ -112,35 +112,52 @@ const ProductDetail: React.FC<{ initialProduct: Product }> = ({ initialProduct }
 }, [reviews, id]);
 
   const schemaData = useMemo(() => {
-    if (!product) return null;
-    return {
-      "@context": "https://schema.org/",
-      "@type": "Product",
-      "name": product.name,
-      "image": product.images,
-      "description": product.description.replace(/<[^>]*>?/gm, '').substring(0, 200),
-      "brand": { "@type": "Brand", "name": product.brand },
-      "sku": product.id,
-      "mpn": product.id,
-      "offers": {
-        "@type": "Offer",
-        "url": typeof window !== "undefined" ? window.location.href : "",
-        "priceCurrency": "VND",
-        "price": currentPrice,
-        "priceValidUntil": "2026-12-31",
-        "availability": product.isOutOfStock ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
-        "itemCondition": "https://schema.org/NewCondition"
-      },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": product.rating || 5,
-        "bestRating": "5",
-        "worstRating": "1",
-        ratingCount: productReviews.length || 1
-      }
-    };
-  }, [product, reviews, currentPrice]);
+  if (!product) return null;
 
+  return {
+    "@context": "https://schema.org",
+    "@type": "Product",
+
+    name: product.name,
+    image: product.images,
+    description: product.description
+      .replace(/<[^>]*>?/gm, '')
+      .substring(0, 200),
+
+    brand: {
+      "@type": "Brand",
+      name: product.brand
+    },
+
+    sku: product.id,
+    mpn: product.id,
+
+    offers: {
+      "@type": "Offer",
+      url: `https://www.asun.vn/product/${slug}`,
+      priceCurrency: "VND",
+      price: currentPrice,
+      priceValidUntil: "2026-12-31",
+
+      availability: product.isOutOfStock
+        ? "https://schema.org/OutOfStock"
+        : "https://schema.org/InStock",
+
+      itemCondition: "https://schema.org/NewCondition",
+
+      seller: {
+        "@type": "Organization",
+        name: "Asun Việt Nam"
+      }
+    },
+
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: product.rating || 5,
+      reviewCount: productReviews.length || 1
+    }
+  };
+}, [product, productReviews, currentPrice]);
   // --- LOGIC EFFECT GỐC ---
   useEffect(() => {
     if (product) {

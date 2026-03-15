@@ -555,6 +555,13 @@ useEffect(() => {
           <div className="space-y-6">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-4">
               {paginatedProducts.map(product => {
+                const video = product.videoUrls?.[0] || product.videoUrl;
+
+const isYoutube =
+  video && (video.includes("youtube.com") || video.includes("youtu.be"));
+
+const isMp4 = video && video.includes(".mp4");
+                const secondImage = product.images?.[1];
                 const isFS = product.flashSalePrice && product.flashSaleEnd && new Date(product.flashSaleEnd) > now && (!product.flashSaleStart || new Date(product.flashSaleStart) <= now);
                 let pPrice = product.isShockSale && product.shockSalePrice ? product.shockSalePrice : (isFS ? product.flashSalePrice! : product.price);
                 const hasDiscount = product.originalPrice && product.originalPrice > pPrice;
@@ -564,7 +571,57 @@ useEffect(() => {
                 return (
                   <div key={product.id} className="group bg-white border border-transparent hover:border-[#ee4d2d] hover:shadow-xl transition-all duration-500 flex flex-col h-full relative overflow-hidden rounded-sm shadow-sm">
                     <Link href={`/product/${createSlug(product.name, product.id)}`} className="block relative aspect-square overflow-hidden bg-white">
-                      <img src={product.images[0]} className="w-full h-full object-contain p-2 group-hover:scale-105 transition-all duration-700" />
+                      <div className="relative w-full h-full">
+
+{/* Ảnh chính */}
+<img
+  src={product.images[0]}
+  className={`absolute inset-0 w-full h-full object-contain p-2 transition-opacity duration-300 ${
+    video || secondImage ? "group-hover:opacity-0" : ""
+  }`}
+/>
+
+{/* Video */}
+{/* Video MP4 */}
+{isMp4 && (
+  <video
+    src={video}
+    muted
+    loop
+    playsInline
+    preload="metadata"
+    poster={product.images[0]}
+    className="absolute inset-0 w-full h-full object-contain opacity-0 group-hover:opacity-100"
+    onMouseEnter={(e) => e.currentTarget.play()}
+    onMouseLeave={(e) => {
+      e.currentTarget.pause();
+      e.currentTarget.currentTime = 0;
+    }}
+  />
+)}
+
+{/* Video Youtube */}
+{isYoutube && (
+  <iframe
+    src={
+      video.includes("watch?v=")
+        ? video.replace("watch?v=", "embed/")
+        : video.replace("youtu.be/", "youtube.com/embed/")
+    }
+    className="absolute inset-0 w-full h-full opacity-0 group-hover:opacity-100"
+    allow="autoplay; encrypted-media"
+  />
+)}
+
+{/* Ảnh thứ 2 nếu không có video */}
+{!video && secondImage && (
+  <img
+    src={secondImage}
+    className="absolute inset-0 w-full h-full object-contain p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+  />
+)}
+
+</div>
                       <div className="absolute top-1.5 left-1.5 z-20 flex flex-col gap-1">
                         <div className="flex flex-wrap gap-1 max-w-[80%]">
                           {product.isShockSale ? <div className="bg-purple-600 text-white text-[8px] font-black px-1.5 py-0.5 uppercase italic rounded-sm shadow-sm">XẢ KHO</div> : <div className="bg-[#ee4d2d] text-white text-[8px] font-black px-1.5 py-0.5 uppercase italic rounded-sm shadow-sm">YÊU THÍCH</div>}

@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product: any = await getProduct(slug);
 
   const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "https://asun.vn";
+    process.env.NEXT_PUBLIC_SITE_URL || "https://www.asun.vn";
 
   if (!product) {
     return {

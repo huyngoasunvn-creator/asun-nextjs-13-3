@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import ProductList from "@/components/ProductList";
 
 const baseUrl =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://asun.vn";
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.asun.vn";
 
 export const metadata: Metadata = {
 
@@ -36,13 +36,13 @@ export const metadata: Metadata = {
     siteName: "Asun Việt Nam",
 
     images: [
-      {
-        url: `${baseUrl}/logo.png`,
-        width: 1200,
-        height: 630,
-        alt: "Asun Việt Nam"
-      }
-    ],
+  {
+    url: `${baseUrl}/opengraph-image.jpg`,
+    width: 1200,
+    height: 630,
+    alt: "Asun Việt Nam"
+  }
+],
 
     locale: "vi_VN",
     type: "website"
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     title: "Asun Việt Nam | Điện máy chính hãng",
     description:
       "Asun Việt Nam chuyên cung cấp điện máy chính hãng giá tốt.",
-    images: [`${baseUrl}/logo.png`]
+    images: [`${baseUrl}/opengraph-image.jpg`]
   }
 };
 
