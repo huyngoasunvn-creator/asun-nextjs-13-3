@@ -6,6 +6,7 @@ import { useApp } from '../store/AppContext';
 import Link from 'next/link';
 import { Product } from '../types';
 import { createSlug } from '../utils/seo';
+import SmartImage from './SmartImage';
 
 const FlashSaleCountdown: React.FC<{ targetTime: string, label: string, theme: 'red' | 'blue' }> = ({ targetTime, label, theme }) => {
   const [timeLeft, setTimeLeft] = useState({ h: '00', m: '00', s: '00' });
@@ -39,26 +40,33 @@ const FlashSaleCountdown: React.FC<{ targetTime: string, label: string, theme: '
   );
 };
 
-const FlashSales: React.FC = () => {
-  const { products, addToCart, wishlist, toggleWishlist } = useApp();
+type FlashSalesProps = {
+  initialProducts?: Product[];
+};
+
+const FlashSales: React.FC<FlashSalesProps> = ({ initialProducts = [] }) => {
+  const { products, addToCart } = useApp();
+  const sourceProducts = products.length > 0 ? products : initialProducts;
   const now = new Date();
 
   const activeFlashSales = useMemo(() => {
-    return products.filter(p => 
+    return sourceProducts.filter(p => 
+      !p.isHidden &&
       p.flashSalePrice && 
       p.flashSaleEnd && 
       new Date(p.flashSaleEnd) > now &&
       (!p.flashSaleStart || new Date(p.flashSaleStart) <= now)
     );
-  }, [products]);
+  }, [sourceProducts]);
 
   const upcomingFlashSales = useMemo(() => {
-    return products.filter(p => 
+    return sourceProducts.filter(p => 
+      !p.isHidden &&
       p.flashSalePrice && 
       p.flashSaleStart && 
       new Date(p.flashSaleStart) > now
     );
-  }, [products]);
+  }, [sourceProducts]);
 
   const maskPrice = (price: number) => {
     const s = price.toLocaleString('vi-VN');
@@ -106,7 +114,7 @@ const FlashSales: React.FC = () => {
               return (
                 <div key={product.id} className={`group bg-white border border-transparent hover:border-[#ee4d2d] hover:shadow-2xl transition-all duration-500 flex flex-col h-full relative overflow-hidden rounded-sm shadow-sm ${product.isOutOfStock ? 'grayscale-[0.4]' : ''}`}>
                   <Link href={`/product/${createSlug(product.name, product.id)}`} className="block relative aspect-square overflow-hidden bg-white">
-                    <img src={product.images[0]} className="w-full h-full object-contain p-2 group-hover:scale-105 transition-all duration-700" />
+                    <SmartImage src={product.images[0]} widthHint={480} heightHint={480} fit="fit" sizes="(max-width: 768px) 50vw, (max-width: 1280px) 25vw, 20vw" className="w-full h-full object-contain p-2 group-hover:scale-105 transition-all duration-700" alt={product.name} />
                     <div className="absolute top-2 left-2 z-20 flex flex-col gap-1">
                       <div className="bg-[#ee4d2d] text-white text-[9px] font-black px-1.5 py-0.5 uppercase italic">LIVE NOW</div>
                       <div className="bg-yellow-400 text-slate-900 text-[10px] font-black px-1.5 py-0.5">-{discountPercent}%</div>
@@ -154,7 +162,7 @@ const FlashSales: React.FC = () => {
             {upcomingFlashSales.map(product => (
               <div key={product.id} className="group bg-white border border-blue-100 transition-all duration-500 flex flex-col h-full relative overflow-hidden rounded-sm shadow-sm grayscale-[0.5] hover:grayscale-0">
                 <div className="block relative aspect-square overflow-hidden bg-white">
-                  <img src={product.images[0]} className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-700" />
+                  <SmartImage src={product.images[0]} widthHint={480} heightHint={480} fit="fit" sizes="(max-width: 768px) 50vw, (max-width: 1280px) 25vw, 20vw" className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-700" alt={product.name} />
                 </div>
                 <div className="p-4 flex-grow flex flex-col justify-between space-y-3">
                   <h3 className="text-[13px] font-bold text-slate-600 line-clamp-2 h-10">{product.name}</h3>

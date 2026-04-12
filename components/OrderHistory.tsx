@@ -6,6 +6,7 @@ import { useAuth } from '../store/AuthContext';
 import Link from 'next/link';
 import ReviewModal from './ReviewModal';
 import { Product, Order } from '../types';
+import SmartImage from './SmartImage';
 
 // Fixed TS error by using React.FC which properly handles reserved props like 'key'
 // and improved prop handling for setReviewProduct.
@@ -59,7 +60,7 @@ const OrderCard: React.FC<{
           <div key={idx} className="space-y-2 border-b last:border-none pb-4 last:pb-0">
             <div className="flex gap-4 items-center group">
               <div className="w-16 h-16 rounded-sm object-cover border shrink-0 overflow-hidden">
-                 <img src={item.images[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                 <SmartImage src={item.images[0]} widthHint={128} heightHint={128} sizes="64px" className="w-full h-full object-cover group-hover:scale-110 transition-transform" alt={item.name} />
               </div>
               <div className="flex-1">
                 <div className="text-xs font-bold text-slate-800 uppercase tracking-tight">{item.name}</div>

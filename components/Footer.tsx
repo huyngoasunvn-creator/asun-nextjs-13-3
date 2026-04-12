@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { useApp } from '../store/AppContext';
+import SmartImage from './SmartImage';
 
 const Footer: React.FC = () => {
   const { appConfig } = useApp();
@@ -18,7 +19,7 @@ const Footer: React.FC = () => {
             <div className="flex flex-row md:flex-row gap-3 md:gap-4 items-center">
                {/* Ẩn QR trên mobile vì không thực tế khi dùng chính điện thoại đó để quét */}
                <div className="hidden md:flex w-20 h-20 bg-white items-center justify-center border p-1 rounded-sm shadow-sm shrink-0">
-                  <img src={appConfig.qrCodeUrl} alt="App QR" className="w-full h-full object-contain" />
+                  <SmartImage src={appConfig.qrCodeUrl} widthHint={160} heightHint={160} fit="fit" sizes="80px" alt="App QR" className="w-full h-full object-contain" />
                </div>
                <div className="flex flex-row md:flex-col gap-2 md:gap-2 md:justify-between md:py-0.5">
                   <a 
@@ -51,8 +52,11 @@ const Footer: React.FC = () => {
                 rel="noopener noreferrer" 
                 className="block transition-transform hover:scale-105 active:scale-95"
               >
-                <img 
+                <SmartImage 
                   src="https://dangkywebvoibocongthuong.com/wp-content/uploads/2021/11/logo-da-thong-bao-bo-cong-thuong.png" 
+                  widthHint={320}
+                  heightHint={120}
+                  sizes="160px"
                   alt="Đã thông báo Bộ Công Thương" 
                   className="h-10 md:h-16 w-auto object-contain" 
                 />

@@ -1,32 +1,32 @@
-import { db } from "@/services/firebaseClient";
-import { collection, getDocs } from "firebase/firestore";
+import { serverDb } from "@/services/firebaseServer";
+import { collection, getDocs } from "firebase/firestore/lite";
+import { createSlug } from "@/utils/seo";
+
+export const revalidate = 3600;
 
 export async function GET() {
 
   const baseUrl =
     process.env.NEXT_PUBLIC_SITE_URL || "https://asun.vn";
 
-  const snapshot = await getDocs(collection(db, "products"));
+  const snapshot = await getDocs(collection(serverDb, "products"));
 
   const urls = snapshot.docs.map((doc) => {
 
-    const data: any = doc.data();
+    const data = doc.data() as {
+      name?: string;
+      createdAt?: string;
+      isHidden?: boolean;
+    };
 
-    const nameSlug = data.name
-      ?.normalize("NFD")
-      ?.replace(/[\u0300-\u036f]/g, "")
-      ?.toLowerCase()
-      ?.replace(/[^a-z0-9\s-]/g, "")
-      ?.replace(/\s+/g, "-")
-      ?.slice(0, 60);
+    if (!data.name || data.isHidden) return "";
 
-    const slug =
-      data.slug || `${nameSlug}-p-${doc.id}`;
+    const slug = createSlug(data.name, doc.id);
 
     return `
       <url>
         <loc>${baseUrl}/product/${slug}</loc>
-        <lastmod>${new Date().toISOString()}</lastmod>
+        <lastmod>${data.createdAt || new Date().toISOString()}</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
       </url>

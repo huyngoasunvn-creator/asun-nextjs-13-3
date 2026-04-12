@@ -3,11 +3,22 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../store/AppContext';
 import { useAuth } from '../store/AuthContext';
-import { Category, Product, Banner, Coupon } from '../types';
+import { Banner, Brand, Category, CategoryConfig, CategoryTheme, Commitment, Coupon, Product } from '../types';
 import Link from 'next/link';
 import { createSlug } from '../utils/seo';
+import SmartImage from './SmartImage';
 
 type SortOption = 'relevance' | 'newest' | 'topSales' | 'priceAsc' | 'priceDesc' | 'featured' | 'topRated';
+type ProductListProps = {
+  initialProducts?: Product[];
+  initialBanners?: Banner[];
+  initialCoupons?: Coupon[];
+  initialBrands?: Brand[];
+  initialCommitments?: Commitment[];
+  initialCategoryConfigs?: CategoryConfig[];
+  initialCategoryThemes?: CategoryTheme[];
+  initialVisibleCategories?: Category[];
+};
 
 const removeAccents = (str: string) => {
   return str
@@ -106,7 +117,16 @@ const CouponIncentive: React.FC<{ product: Product, coupons: Coupon[] }> = ({ pr
   );
 };
 
-const ProductList: React.FC = () => {
+const ProductList: React.FC<ProductListProps> = ({
+  initialProducts = [],
+  initialBanners = [],
+  initialCoupons = [],
+  initialBrands = [],
+  initialCommitments = [],
+  initialCategoryConfigs = [],
+  initialCategoryThemes = [],
+  initialVisibleCategories = [],
+}) => {
   const [isMobile, setIsMobile] = useState(false);
 
 useEffect(() => {
@@ -122,6 +142,22 @@ useEffect(() => {
     setAlertProduct, coupons, saveCouponToUser, userSavedCouponCodes
   } = useApp();
   const { user } = useAuth();
+
+  const sourceProducts = products.length > 0 ? products : initialProducts;
+  const sourceBanners = banners.length > 0 ? banners : initialBanners;
+  const sourceBrands = brands.length > 0 ? brands : initialBrands;
+  const sourceCommitments = commitments.length > 0 ? commitments : initialCommitments;
+  const sourceCoupons = coupons.length > 0 ? coupons : initialCoupons;
+  const sourceCategoryConfigs = categoryConfigs.length > 0 ? categoryConfigs : initialCategoryConfigs;
+  const sourceCategoryThemes = categoryThemes.length > 0 ? categoryThemes : initialCategoryThemes;
+  const defaultVisibleCategories = Object.values(Category);
+  const hasLoadedVisibleCategories =
+    visibleCategories.length !== defaultVisibleCategories.length ||
+    visibleCategories.some((category, index) => category !== defaultVisibleCategories[index]);
+  const sourceVisibleCategories =
+    hasLoadedVisibleCategories || initialVisibleCategories.length === 0
+      ? visibleCategories
+      : initialVisibleCategories;
   
   const [currentSlide, setCurrentSlide] = useState(0);
   const [activeCommitment, setActiveCommitment] = useState<{title: string, content: string} | null>(null);
@@ -129,8 +165,8 @@ useEffect(() => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
-  const mainBanners = banners.filter(b => b.isActive && b.position === 'main');
-  const sideBanners = banners.filter(b => b.isActive && b.position === 'side').slice(0, 2);
+  const mainBanners = sourceBanners.filter(b => b.isActive && b.position === 'main');
+  const sideBanners = sourceBanners.filter(b => b.isActive && b.position === 'side').slice(0, 2);
   const now = new Date();
 
   const isGiftActive = (p: Product) => {
@@ -150,23 +186,23 @@ useEffect(() => {
   const hasAnyPromo = (p: Product) => isGiftActive(p) || isBuyXGetYActive(p);
 
   const flashSaleProducts = useMemo(() => {
-    return products.filter(p => 
+    return sourceProducts.filter(p => 
       !p.isHidden && p.flashSalePrice && p.flashSaleEnd && new Date(p.flashSaleEnd) > now && (!p.flashSaleStart || new Date(p.flashSaleStart) <= now)
     ).sort((a, b) => (a.isOutOfStock ? 1 : 0) - (b.isOutOfStock ? 1 : 0));
-  }, [products, now]);
+  }, [sourceProducts, now]);
 
   const promoProducts = useMemo(() => {
-    return products.filter(p => !p.isHidden && hasAnyPromo(p) && !p.isOutOfStock).slice(0, 15);
-  }, [products, now]);
+    return sourceProducts.filter(p => !p.isHidden && hasAnyPromo(p) && !p.isOutOfStock).slice(0, 15);
+  }, [sourceProducts, now]);
 
   const activeCoupons = useMemo(() => {
-    return coupons.filter(c => {
+    return sourceCoupons.filter(c => {
       if (!c.isActive) return false;
       if (c.startDate && new Date(c.startDate) > now) return false;
       if (c.endDate && new Date(c.endDate) < now) return false;
       return true;
     }).slice(0, 10);
-  }, [coupons, now]);
+  }, [sourceCoupons, now]);
 
   useEffect(() => {
     if (mainBanners.length <= 1) return;
@@ -196,7 +232,7 @@ useEffect(() => {
   const filteredAndSortedProducts = useMemo(() => {
     const normalizedQuery = removeAccents(searchQuery);
     const queryWords = normalizedQuery.split(/\s+/).filter(word => word.length > 0);
-    let result = products.filter(p => {
+    let result = sourceProducts.filter(p => {
       if (p.isHidden) return false;
       const normalizedPName = removeAccents(p.name);
       const normalizedPBrand = removeAccents(p.brand);
@@ -224,7 +260,7 @@ useEffect(() => {
       }
     });
     return result;
-  }, [products, searchQuery, activeCategory, selectedBrand, sortBy, now]);
+  }, [sourceProducts, searchQuery, activeCategory, selectedBrand, sortBy, now]);
 
   const totalPages = Math.ceil(filteredAndSortedProducts.length / ITEMS_PER_PAGE);
   const paginatedProducts = filteredAndSortedProducts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
@@ -245,13 +281,13 @@ useEffect(() => {
   };
 
   const sortedVisibleCategories = useMemo(() => {
-    return [...categoryConfigs].sort((a, b) => a.order - b.order).filter(conf => visibleCategories.includes(conf.category));
-  }, [categoryConfigs, visibleCategories]);
+    return [...sourceCategoryConfigs].sort((a, b) => a.order - b.order).filter(conf => sourceVisibleCategories.includes(conf.category));
+  }, [sourceCategoryConfigs, sourceVisibleCategories]);
 
   const activeTheme = useMemo(() => {
     if (activeCategory === 'Tất cả') return null;
-    return categoryThemes.find(t => t.category === activeCategory);
-  }, [categoryThemes, activeCategory]);
+    return sourceCategoryThemes.find(t => t.category === activeCategory);
+  }, [sourceCategoryThemes, activeCategory]);
 
   return (
     <div className="space-y-3 md:space-y-5 mt-2">
@@ -260,7 +296,7 @@ useEffect(() => {
           <div className="md:col-span-2 relative h-[200px] md:h-[380px] rounded-sm overflow-hidden shadow-sm bg-slate-100">
             {mainBanners.map((banner, index) => (
               <div key={banner.id} className={`absolute inset-0 transition-all duration-1000 ${index === currentSlide ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-105 z-0'}`}>
-                <img src={banner.imageUrl} className="w-full h-full object-cover" />
+                <SmartImage src={banner.imageUrl} widthHint={1280} heightHint={760} sizes="(max-width: 768px) 100vw, 66vw" priority={index === currentSlide} className="w-full h-full object-cover" alt={banner.title} />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent flex flex-col justify-center p-6 md:p-12 text-white">
                   <h2 className="text-2xl md:text-4xl font-black mb-4 md:mb-6 uppercase italic tracking-tighter leading-tight max-w-md drop-shadow-2xl">{banner.title}</h2>
                   <Link href={banner.link} className="bg-white text-[#ee4d2d] px-6 md:px-8 py-2.5 md:py-3.5 rounded-sm font-black w-fit uppercase text-[10px] md:text-xs tracking-widest shadow-2xl hover:scale-105 transition-transform">{banner.buttonText}</Link>
@@ -278,7 +314,7 @@ useEffect(() => {
           <div className="hidden md:flex flex-col gap-2 md:gap-3 h-[380px]">
             {sideBanners.map((b) => (
               <Link key={b.id} href={b.link} className="flex-1 rounded-sm overflow-hidden relative border shadow-sm group">
-                <img src={b.imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                <SmartImage src={b.imageUrl} widthHint={640} heightHint={380} sizes="33vw" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={b.title} />
                 <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors"></div>
                 <div className="absolute bottom-3 left-4 right-4 text-white">
                   <h3 className="font-black text-xs uppercase italic leading-tight drop-shadow-lg">{b.title}</h3>
@@ -291,7 +327,7 @@ useEffect(() => {
 
       {!searchQuery && !selectedBrand && activeCategory !== 'Tất cả' && activeTheme && (
         <div className="relative h-[120px] md:h-[240px] rounded-sm overflow-hidden shadow-md border-b-4 border-[#ee4d2d] animate-in slide-in-from-top duration-500">
-           <img src={activeTheme.image} className="w-full h-full object-cover" alt={activeCategory} />
+           <SmartImage src={activeTheme.image} widthHint={1200} heightHint={480} sizes="100vw" priority className="w-full h-full object-cover" alt={activeCategory} />
            <div className={`absolute inset-0 bg-gradient-to-r ${activeTheme.color} to-transparent opacity-80`}></div>
            <div className="absolute inset-0 flex items-center px-6 md:px-12">
               <div className="space-y-1 md:space-y-2 max-w-2xl text-white">
@@ -341,7 +377,9 @@ useEffect(() => {
                             <i className={`fa-solid ${isFreeship ? 'fa-truck-fast text-emerald-500' : 'fa-tag text-[#ee4d2d]'} text-[8px]`}></i>
                             <h4 className="text-[9px] md:text-[10px] font-black text-slate-800 uppercase leading-tight truncate">Mã: {coupon.code}</h4>
                           </div>
-                          <p className="text-[8px] md:text-[9px] font-bold text-slate-400 mt-1 uppercase">Đơn từ ₫{coupon.minOrder.toLocaleString()}</p>
+                          <p className="text-[8px] md:text-[9px] font-bold text-slate-400 mt-1 uppercase">
+  Đơn từ ₫{coupon.minOrder.toLocaleString("vi-VN")}
+</p>
                        </div>
                        <button 
                           onClick={() => handleCollectCoupon(coupon)}
@@ -362,7 +400,7 @@ useEffect(() => {
       {!searchQuery && !selectedBrand && activeCategory === 'Tất cả' && (
         <div className="bg-white py-6 md:py-8 border-y border-slate-100 shadow-sm px-4">
           <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-3">
-            {commitments.map((c) => (
+            {sourceCommitments.map((c) => (
               <div key={c.id} onClick={() => setActiveCommitment({title: c.title, content: c.detail})} className="flex items-center gap-4 group px-2 md:border-r border-slate-100 last:border-none cursor-pointer">
                 <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center border border-blue-100 shrink-0 group-hover:bg-blue-600 transition-all shadow-sm">
                   <i className={`fa-solid ${c.icon} text-xl text-blue-600 group-hover:text-white transition-colors`}></i>
@@ -406,7 +444,7 @@ useEffect(() => {
         </div>
       )}
 
-      {!searchQuery && activeCategory === 'Tất cả' && brands.length > 0 && (
+      {!searchQuery && activeCategory === 'Tất cả' && sourceBrands.length > 0 && (
         <div className="bg-white p-3 md:p-4 rounded-sm shadow-sm border border-slate-100 relative">
           <div className="flex items-center justify-between mb-3 border-b border-slate-50 pb-2">
              <h2 className="text-[10px] md:text-[11px] font-black text-slate-800 uppercase tracking-[0.2em] flex items-center gap-2 italic">
@@ -423,14 +461,14 @@ useEffect(() => {
               </div>
               <span className={`text-[8px] md:text-[9px] font-black uppercase tracking-tighter text-center transition-colors ${!selectedBrand ? 'text-[#ee4d2d]' : 'text-slate-400'}`}>TẤT CẢ</span>
             </button>
-            {brands.map(brand => (
+            {sourceBrands.map(brand => (
               <button 
                 key={brand.id} 
                 onClick={() => setSelectedBrand(brand.name === selectedBrand ? null : brand.name)}
                 className={`shrink-0 flex items-center flex-col gap-2 snap-start transition-all group ${selectedBrand === brand.name ? 'scale-105' : 'opacity-60 hover:opacity-100'}`}
               >
                 <div className={`w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center border-2 transition-all overflow-hidden p-1 shadow-sm ${selectedBrand === brand.name ? 'border-[#ee4d2d] bg-white shadow-md' : 'border-slate-100 bg-white'}`}>
-                  <img src={brand.logoUrl} className="w-full h-full object-contain" alt={brand.name} />
+                  <SmartImage src={brand.logoUrl} widthHint={128} heightHint={128} fit="fit" sizes="64px" className="w-full h-full object-contain" alt={brand.name} />
                 </div>
                 <span className={`text-[8px] md:text-[9px] font-black uppercase tracking-tighter text-center transition-colors ${selectedBrand === brand.name ? 'text-[#ee4d2d]' : 'text-slate-400'}`}>{brand.name}</span>
               </button>
@@ -453,15 +491,15 @@ useEffect(() => {
           </div>
           <div className="flex gap-3 overflow-x-auto custom-scrollbar pb-3 snap-x">
             {flashSaleProducts.map(p => (
-              <Link key={p.id} href={`/product/${createSlug(p.name, p.id)}`} className={`w-[140px] md:w-[180px] shrink-0 bg-slate-50 p-2.5 rounded-sm flex flex-col items-center group relative border border-transparent hover:border-[#ee4d2d] transition-all snap-start ${p.isOutOfStock ? 'opacity-70' : ''}`}>
+                <Link key={p.id} href={`/product/${createSlug(p.name, p.id)}`} className={`w-[140px] md:w-[180px] shrink-0 bg-slate-50 p-2.5 rounded-sm flex flex-col items-center group relative border border-transparent hover:border-[#ee4d2d] transition-all snap-start ${p.isOutOfStock ? 'opacity-70' : ''}`}>
                 <div className="aspect-square w-full rounded-sm overflow-hidden mb-2 relative bg-white border">
-                  <img src={p.images[0]} className="w-full h-full object-contain p-1.5 group-hover:scale-110 transition-transform" />
+                  <SmartImage src={p.images[0]} widthHint={360} heightHint={360} fit="fit" sizes="(max-width: 768px) 40vw, 180px" className="w-full h-full object-contain p-1.5 group-hover:scale-110 transition-transform" alt={p.name} />
                   <div className="absolute top-1 left-1 bg-yellow-400 text-slate-900 text-[8px] font-black px-1 rounded-sm shadow-sm">-{Math.round(((p.originalPrice! - p.flashSalePrice!) / p.originalPrice!) * 100)}%</div>
                   {p.isFreeship && <div className="absolute top-1 right-1 bg-emerald-600 text-white text-[7px] font-black px-1 py-0.5 rounded-sm shadow-sm z-10"><i className="fa-solid fa-truck-fast"></i></div>}
                 </div>
                 <div className="text-[10px] font-bold text-slate-700 line-clamp-1 mb-0.5">{p.name}</div>
                 <div className="text-xs md:text-sm font-black text-[#ee4d2d]">₫{p.flashSalePrice?.toLocaleString()}</div>
-                <CouponIncentive product={p} coupons={coupons} />
+                <CouponIncentive product={p} coupons={sourceCoupons} />
                 <div className="w-full h-2.5 bg-slate-200 rounded-full mt-2 overflow-hidden relative shadow-inner">
                    <div className={`${p.isOutOfStock ? 'bg-slate-400' : 'bg-gradient-to-r from-orange-500 to-[#ee4d2d]'} h-full`} style={{ width: p.isOutOfStock ? '100%' : '80%' }} />
                 </div>
@@ -483,16 +521,16 @@ useEffect(() => {
           <div className="flex gap-3 overflow-x-auto custom-scrollbar pb-3 snap-x">
             {promoProducts.map(p => {
               const buyXGetY = isBuyXGetYActive(p);
-              const giftProd = p.promoGiftProductId ? products.find(prod => prod.id === p.promoGiftProductId) : null;
+               const giftProd = p.promoGiftProductId ? sourceProducts.find(prod => prod.id === p.promoGiftProductId) : null;
               return (
                 <Link key={p.id} href={`/product/${createSlug(p.name, p.id)}`} className="w-[150px] md:w-[200px] shrink-0 bg-white p-2.5 rounded-sm flex flex-col group relative border border-slate-100 hover:border-pink-500 hover:shadow-lg transition-all snap-start">
                   <div className="aspect-square w-full rounded-sm overflow-hidden mb-2 relative bg-slate-50 border border-slate-50">
-                    <img src={p.images[0]} className="w-full h-full object-contain p-1.5 group-hover:scale-110 transition-transform" />
+                    <SmartImage src={p.images[0]} widthHint={400} heightHint={400} fit="fit" sizes="(max-width: 768px) 42vw, 200px" className="w-full h-full object-contain p-1.5 group-hover:scale-110 transition-transform" alt={p.name} />
                     <div className="absolute top-1 left-1 bg-pink-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded-sm shadow-md italic">FREE GIFT</div>
                     {p.isFreeship && <div className="absolute top-1 right-1 bg-emerald-600 text-white text-[7px] font-black px-1.5 py-0.5 rounded-sm shadow-md italic z-10">FREESHIP</div>}
                     <div className="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm p-1 flex items-center gap-1.5 border-t border-pink-100">
                       <div className="w-5 h-5 bg-pink-50 rounded-sm border border-pink-100 flex items-center justify-center shrink-0">
-                         {giftProd ? <img src={giftProd.images[0]} className="w-full h-full object-cover" /> : p.promoGiftImage ? <img src={p.promoGiftImage} className="w-full h-full object-cover" /> : <i className="fa-solid fa-gift text-pink-500 text-[8px]"></i>}
+                         {giftProd ? <SmartImage src={giftProd.images[0]} widthHint={40} heightHint={40} sizes="20px" className="w-full h-full object-cover" alt={giftProd.name} /> : p.promoGiftImage ? <SmartImage src={p.promoGiftImage} widthHint={40} heightHint={40} sizes="20px" className="w-full h-full object-cover" alt={p.promoGiftName || 'Quà tặng'} /> : <i className="fa-solid fa-gift text-pink-500 text-[8px]"></i>}
                       </div>
                       <span className="text-[7px] md:text-[8px] font-black text-pink-600 uppercase italic line-clamp-1">{buyXGetY ? `Mua ${p.promoBuyQty} Tặng ${p.promoGetQty}` : 'Tặng: ' + p.giftName}</span>
                     </div>
@@ -500,7 +538,7 @@ useEffect(() => {
                   <h3 className="text-[10px] font-bold text-slate-700 line-clamp-2 leading-tight h-8 mb-1.5 group-hover:text-pink-600 transition-colors">{p.name}</h3>
                   <div className="flex flex-col gap-1 mt-auto">
                     <span className="text-xs font-black text-[#ee4d2d]">₫{p.price.toLocaleString()}</span>
-                    <CouponIncentive product={p} coupons={coupons} />
+                            <CouponIncentive product={p} coupons={sourceCoupons} />
                   </div>
                 </Link>
               );
@@ -535,7 +573,7 @@ useEffect(() => {
            {(searchQuery || activeCategory !== 'Tất cả') && (
              <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto custom-scrollbar no-scrollbar py-1">
                 <button onClick={() => setSelectedBrand(null)} className={`shrink-0 px-3 py-1.5 rounded-full text-[9px] font-black uppercase border transition-all ${!selectedBrand ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-400 border-slate-100'}`}>TẤT CẢ HÃNG</button>
-                {brands.map(brand => (
+                {sourceBrands.map(brand => (
                   <button key={brand.id} onClick={() => setSelectedBrand(brand.name === selectedBrand ? null : brand.name)} className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all ${selectedBrand === brand.name ? 'border-[#ee4d2d] bg-orange-50 text-[#ee4d2d]' : 'border-slate-100 text-slate-400'}`}>
                     <span className="text-[9px] font-black uppercase">{brand.name}</span>
                   </button>
@@ -574,11 +612,16 @@ const isMp4 = video && video.includes(".mp4");
                       <div className="relative w-full h-full">
 
 {/* Ảnh chính */}
-<img
+<SmartImage
   src={product.images[0]}
+  widthHint={520}
+  heightHint={520}
+  fit="fit"
+  sizes="(max-width: 768px) 50vw, (max-width: 1280px) 25vw, 20vw"
   className={`absolute inset-0 w-full h-full object-contain p-2 transition-opacity duration-300 ${
     video || secondImage ? "group-hover:opacity-0" : ""
   }`}
+  alt={product.name}
 />
 
 {/* Video */}
@@ -615,9 +658,14 @@ const isMp4 = video && video.includes(".mp4");
 
 {/* Ảnh thứ 2 nếu không có video */}
 {!video && secondImage && (
-  <img
+  <SmartImage
     src={secondImage}
+    widthHint={520}
+    heightHint={520}
+    fit="fit"
+    sizes="(max-width: 768px) 50vw, (max-width: 1280px) 25vw, 20vw"
     className="absolute inset-0 w-full h-full object-contain p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+    alt={product.name}
   />
 )}
 
@@ -660,7 +708,7 @@ KHUYẾN MÃI
                       <div>
                         <div className="flex flex-col gap-0.5">
                           <span className="text-[13px] md:text-[14px] font-black text-[#ee4d2d]">₫{pPrice.toLocaleString()}</span>
-                          <CouponIncentive product={product} coupons={coupons} />
+                          <CouponIncentive product={product} coupons={sourceCoupons} />
                         </div>
                         <div className="flex items-center justify-between mt-2">
                           <StarRating rating={product.rating} />
@@ -690,11 +738,11 @@ KHUYẾN MÃI
         <div className="space-y-8 py-4">
           {sortedVisibleCategories.map(conf => {
             const cat = conf.category;
-            const catProducts = products
+            const catProducts = sourceProducts
   .filter(p => !p.isHidden && p.category === cat)
   .slice(0, isMobile ? 6 : 5);
             if (catProducts.length === 0) return null;
-            const theme = categoryThemes.find(t => t.category === cat) || { image: '', color: 'from-slate-600', slogan: 'Khám phá ngay', accentClass: 'text-slate-800', bgClass: 'bg-slate-50' };
+            const theme = sourceCategoryThemes.find(t => t.category === cat) || { image: '', color: 'from-slate-600', slogan: 'Khám phá ngay', accentClass: 'text-slate-800', bgClass: 'bg-slate-50' };
             return (
               <div key={cat} className="space-y-3 animate-in fade-in duration-1000">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2">
@@ -712,7 +760,7 @@ KHUYẾN MÃI
                     return (
                       <Link key={product.id} href={`/product/${createSlug(product.name, product.id)}`} className="group bg-white border border-slate-100 p-2.5 rounded-sm hover:shadow-lg transition-all duration-300 relative flex flex-col">
                          <div className="aspect-square w-full rounded-sm overflow-hidden mb-2 bg-slate-50 border border-slate-50 relative">
-                           <img src={product.images[0]} className="w-full h-full object-contain p-1 group-hover:scale-105" />
+                           <SmartImage src={product.images[0]} widthHint={320} heightHint={320} fit="fit" sizes="(max-width: 768px) 50vw, 20vw" className="w-full h-full object-contain p-1 group-hover:scale-105" alt={product.name} />
                            <div className="absolute top-1 left-1 flex flex-col gap-1 z-10">
                               {product.isFreeship && <div className="bg-emerald-600 text-white text-[7px] font-black px-1 py-0.5 rounded-sm uppercase tracking-tighter shadow-sm flex items-center gap-1"><i className="fa-solid fa-truck-fast text-[6px]"></i> FREESHIP</div>}
                               {giftActive && !product.isOutOfStock && <div className="bg-[#e33a89] text-white text-[7px] font-black px-1 py-0.5 rounded-sm uppercase tracking-tighter shadow-sm flex items-center gap-1"><i className="fa-solid fa-gift text-[6px]"></i> CÓ QUÀ</div>}
@@ -721,7 +769,7 @@ KHUYẾN MÃI
                          <h4 className="text-[10px] md:text-[11px] font-bold text-slate-700 line-clamp-2 leading-tight h-8 mb-1.5 group-hover:text-[#ee4d2d] transition-colors">{product.name}</h4>
                          <div className="mt-auto flex flex-col gap-1">
                             <span className="text-[13px] font-black text-[#ee4d2d]">₫{pPrice.toLocaleString()}</span>
-                            <CouponIncentive product={product} coupons={coupons} />
+                            <CouponIncentive product={product} coupons={sourceCoupons} />
                             <div className="mt-1">
                               <StarRating rating={product.rating} />
                             </div>

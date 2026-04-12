@@ -16,5 +16,17 @@ View your app in AI Studio: https://ai.studio/apps/2a3beef4-36bc-42ff-94ca-12626
 1. Install dependencies:
    `npm install`
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
+3. If you want to upload images from your computer to Cloudinary in the admin panel, add these variables to `.env.local`:
+   `CLOUDINARY_CLOUD_NAME`
+   `CLOUDINARY_API_KEY`
+   `CLOUDINARY_API_SECRET`
+   `CLOUDINARY_UPLOAD_FOLDER`
+4. If you want to protect admin-only AI and upload routes on the server, set:
+   `NEXT_PUBLIC_ADMIN_EMAILS`
+   `ADMIN_EMAILS`
+   Optional for stricter server auth in some environments:
+   `FIREBASE_ADMIN_PROJECT_ID`
+   `FIREBASE_ADMIN_CLIENT_EMAIL`
+   `FIREBASE_ADMIN_PRIVATE_KEY`
+5. Run the app:
    `npm run dev`

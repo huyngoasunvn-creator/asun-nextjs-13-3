@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { useApp } from '../store/AppContext';
 import { useAuth } from '../store/AuthContext';
 import { Product, Review } from '../types';
+import SmartImage from './SmartImage';
 
 interface ReviewModalProps {
   product: Product;
@@ -86,7 +87,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ product, orderId, onClose }) 
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto max-h-[80vh] custom-scrollbar">
           <div className="flex gap-4 items-center bg-slate-50 p-3 rounded-sm">
-            <img src={product.images[0]} className="w-12 h-12 object-cover rounded-sm border" />
+            <SmartImage src={product.images[0]} widthHint={96} heightHint={96} sizes="48px" className="w-12 h-12 object-cover rounded-sm border" alt={product.name} />
             <div className="min-w-0">
               <h4 className="text-xs font-bold text-slate-800 truncate uppercase">{product.name}</h4>
               <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Giao hàng thành công</p>
@@ -157,7 +158,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ product, orderId, onClose }) 
             <div className="flex flex-wrap gap-3">
               {images.map((img, i) => (
                 <div key={i} className="relative w-16 h-16 border rounded-sm overflow-hidden">
-                  <img src={img} className="w-full h-full object-cover" />
+                  <SmartImage src={img} widthHint={128} heightHint={128} sizes="64px" className="w-full h-full object-cover" alt={`Ảnh đánh giá ${i + 1}`} />
                   <button 
                     type="button" 
                     onClick={() => removeImage(i)}

@@ -4,8 +4,9 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useApp } from '../store/AppContext';
-import { Product, Commitment } from '../types';
+import { Product, Review } from '../types';
 import { createSlug, getIdFromSlug } from '../utils/seo';
+import SmartImage from './SmartImage';
 
 const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
   return (
@@ -27,14 +28,26 @@ const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
   );
 };
 
-const ProductDetail: React.FC<{ initialProduct: Product }> = ({ initialProduct }) => {
+type ProductDetailProps = {
+  initialProduct: Product;
+  initialReviews?: Review[];
+  initialRelatedProducts?: Product[];
+  initialGiftProduct?: Product | null;
+};
+
+const ProductDetail: React.FC<ProductDetailProps> = ({
+  initialProduct,
+  initialReviews = [],
+  initialRelatedProducts = [],
+  initialGiftProduct = null,
+}) => {
   
   const params = useParams();
   const slug = params?.slug as string;
   
   const id = getIdFromSlug(slug);
   const router = useRouter();
-  const { products, addToCart, wishlist, toggleWishlist, commitments, setSelectedBrand, setActiveCategory, setSearchQuery, setAlertProduct, reviews } = useApp();
+  const { addToCart, wishlist, toggleWishlist, setSelectedBrand, setActiveCategory, setSearchQuery, setAlertProduct } = useApp();
   
   const [selectedImageIdx, setSelectedImageIdx] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
@@ -52,17 +65,8 @@ const ProductDetail: React.FC<{ initialProduct: Product }> = ({ initialProduct }
   const descRef = useRef<HTMLDivElement>(null);
   const thumbnailContainerRef = useRef<HTMLDivElement>(null);
 
-  const product = initialProduct || products.find(p => p.id === id) || null;
-  const relatedProducts = useMemo(() => {
-  if (!product) return [];
-
-  return products
-    .filter(p =>
-      p.id !== product.id &&
-      (p.category === product.category || p.brand === product.brand)
-    )
-    .slice(0, 8);
-}, [products, product]);
+  const product = initialProduct || null;
+  const relatedProducts = useMemo(() => initialRelatedProducts, [initialRelatedProducts]);
   const breadcrumbSchema = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
@@ -108,8 +112,8 @@ const ProductDetail: React.FC<{ initialProduct: Product }> = ({ initialProduct }
   [product, currentPrice]);
 
   const productReviews = useMemo(() => {
-  return reviews.filter(r => r.productId === `p-${id}`);
-}, [reviews, id]);
+  return initialReviews.filter(r => r.productId === `p-${id}`);
+}, [initialReviews, id]);
 
   const schemaData = useMemo(() => {
   if (!product) return null;
@@ -257,7 +261,7 @@ const prevImage = (e?: React.MouseEvent) => {
   if (!product) return <div className="text-center py-20 font-bold uppercase text-slate-400 italic">Sản phẩm không tồn tại</div>;
 
   const isInWishlist = wishlist.includes(product.id);
-  const giftProduct = product.promoGiftProductId ? products.find(p => p.id === product.promoGiftProductId) : null;
+  const giftProduct = initialGiftProduct;
   
   const isGiftActive = (p: Product) => {
     if (!p.giftName) return false;
@@ -355,7 +359,7 @@ const prevImage = (e?: React.MouseEvent) => {
             className="group relative aspect-square rounded-sm overflow-hidden border bg-slate-50 flex items-center justify-center cursor-zoom-in" 
             onClick={() => setIsLightboxOpen(true)}
           >
-            <img src={product.images[selectedImageIdx]} className={`max-w-full max-h-full object-contain p-4 transition-transform duration-500 group-hover:scale-105 ${product.isOutOfStock ? 'grayscale opacity-50' : ''}`} alt={product.name} />
+            <SmartImage src={product.images[selectedImageIdx]} widthHint={900} heightHint={900} fit="fit" priority sizes="(max-width: 768px) 100vw, 40vw" className={`max-w-full max-h-full object-contain p-4 transition-transform duration-500 group-hover:scale-105 ${product.isOutOfStock ? 'grayscale opacity-50' : ''}`} alt={product.name} />
             {product.images.length > 1 && (
               <>
                 <button onClick={prevImage} className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 shadow-lg text-slate-900 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-[#ee4d2d] hover:text-white"><i className="fa-solid fa-chevron-left"></i></button>
@@ -367,7 +371,7 @@ const prevImage = (e?: React.MouseEvent) => {
           <div className="relative group/thumbs-area">
             <div ref={thumbnailContainerRef} className="flex gap-2 overflow-x-auto pb-4 thumbnail-slider-custom snap-x scroll-smooth">
               {product.images.map((img, i) => (
-                <div key={i} onClick={() => setSelectedImageIdx(i)} className={`w-16 h-16 md:w-24 md:h-24 shrink-0 border cursor-pointer overflow-hidden transition-all snap-start rounded-sm relative ${selectedImageIdx === i ? 'border-[#ee4d2d] ring-2 ring-[#ee4d2d]/20 p-0.5 shadow-md z-10 scale-95' : 'border-slate-100 opacity-60 hover:opacity-100'}`}><img src={img} className={`w-full h-full object-cover ${product.isOutOfStock ? 'grayscale' : ''}`} alt={product.name} /></div>
+                <div key={i} onClick={() => setSelectedImageIdx(i)} className={`w-16 h-16 md:w-24 md:h-24 shrink-0 border cursor-pointer overflow-hidden transition-all snap-start rounded-sm relative ${selectedImageIdx === i ? 'border-[#ee4d2d] ring-2 ring-[#ee4d2d]/20 p-0.5 shadow-md z-10 scale-95' : 'border-slate-100 opacity-60 hover:opacity-100'}`}><SmartImage src={img} widthHint={192} heightHint={192} sizes="96px" className={`w-full h-full object-cover ${product.isOutOfStock ? 'grayscale' : ''}`} alt={product.name} /></div>
               ))}
             </div>
           </div>
@@ -412,7 +416,7 @@ const prevImage = (e?: React.MouseEvent) => {
                    {buyXGetY && (
                      <div className="flex items-center gap-3 bg-white p-2.5 rounded-sm border border-pink-100 shadow-sm group" onClick={() => openGiftLightbox(giftProduct ? giftProduct.images[0] : (product.promoGiftImage || ''))}>
                         <div className="w-10 h-10 bg-pink-50 rounded-sm flex items-center justify-center shrink-0 border border-pink-50 overflow-hidden cursor-zoom-in">
-                           {giftProduct ? <img src={giftProduct.images[0]} className="w-full h-full object-cover" alt="gift" /> : product.promoGiftImage ? <img src={product.promoGiftImage} className="w-full h-full object-cover" alt="gift" /> : <i className="fa-solid fa-boxes-stacked text-pink-400 text-sm"></i>}
+                           {giftProduct ? <SmartImage src={giftProduct.images[0]} widthHint={80} heightHint={80} sizes="40px" className="w-full h-full object-cover" alt={giftProduct.name} /> : product.promoGiftImage ? <SmartImage src={product.promoGiftImage} widthHint={80} heightHint={80} sizes="40px" className="w-full h-full object-cover" alt={product.promoGiftName || 'Quà tặng'} /> : <i className="fa-solid fa-boxes-stacked text-pink-400 text-sm"></i>}
                         </div>
                         <div className="flex-1 min-w-0">
                            <p className="text-[11px] font-black text-slate-800 uppercase leading-none mb-1">CHƯƠNG TRÌNH MUA {product.promoBuyQty} TẶNG {product.promoGetQty}</p>
@@ -423,7 +427,7 @@ const prevImage = (e?: React.MouseEvent) => {
                    {giftActive && (
                      <div className="flex items-center gap-3 bg-white p-2.5 rounded-sm border border-pink-100 shadow-sm" onClick={() => openGiftLightbox(product.giftImage || '')}>
                         <div className="w-10 h-10 bg-pink-50 rounded-sm flex items-center justify-center shrink-0 border border-pink-50 overflow-hidden cursor-zoom-in">
-                           {product.giftImage ? <img src={product.giftImage} className="w-full h-full object-cover" alt="gift" /> : <i className="fa-solid fa-gift text-pink-400 text-sm"></i>}
+                           {product.giftImage ? <SmartImage src={product.giftImage} widthHint={80} heightHint={80} sizes="40px" className="w-full h-full object-cover" alt={product.giftName || 'Quà tặng'} /> : <i className="fa-solid fa-gift text-pink-400 text-sm"></i>}
                         </div>
                         <div className="flex-1 min-w-0">
                            <p className="text-[11px] font-black text-slate-800 uppercase leading-none mb-1">QUÀ TẶNG KÈM TRỰC TIẾP</p>
@@ -595,9 +599,12 @@ const prevImage = (e?: React.MouseEvent) => {
 {review.images && review.images.length > 0 && (
   <div className="flex gap-2 mt-3 flex-wrap">
     {review.images.map((img: string, idx: number) => (
-      <img
+      <SmartImage
         key={idx}
         src={img}
+        widthHint={160}
+        heightHint={160}
+        sizes="80px"
         alt="review image"
         className="w-20 h-20 object-cover rounded border cursor-zoom-in hover:scale-105 transition"
         onClick={() => {
@@ -749,15 +756,23 @@ const prevImage = (e?: React.MouseEvent) => {
 
   <div className="relative w-full h-40">
 
-  <img
+  <SmartImage
     src={p.images?.[0]}
+    widthHint={320}
+    heightHint={320}
+    fit="fit"
+    sizes="(max-width: 768px) 50vw, 20vw"
     alt={p.name}
     className="absolute inset-0 w-full h-full object-contain p-3 transition-opacity duration-300 group-hover:opacity-0"
   />
 
   {p.images?.[1] && (
-    <img
+    <SmartImage
       src={p.images[1]}
+      widthHint={320}
+      heightHint={320}
+      fit="fit"
+      sizes="(max-width: 768px) 50vw, 20vw"
       alt={p.name}
       className="absolute inset-0 w-full h-full object-contain p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
     />

@@ -1,20 +1,9 @@
 import type { Metadata } from "next";
-import { Inter, Merriweather } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/store/AuthContext";
 import { AppProvider } from "@/store/AppContext";
 import ClientLayout from "@/components/ClientLayout";
-
-const inter = Inter({
-  subsets: ["latin", "vietnamese"],
-  variable: "--font-sans",
-});
-
-const merriweather = Merriweather({
-  weight: ["300", "400", "700"],
-  subsets: ["latin"],
-  variable: "--font-serif",
-});
+import { getShellData } from "@/services/publicStore";
 
 const baseUrl = "https://asun.vn";
 
@@ -69,11 +58,12 @@ export const metadata: Metadata = {
 }
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const shellData = await getShellData();
 
   const organizationSchema = {
     "@context": "https://schema.org",
@@ -106,7 +96,7 @@ export default function RootLayout({
         />
       </head>
 
-      <body suppressHydrationWarning className={`${inter.variable} ${merriweather.variable} antialiased`}>
+      <body suppressHydrationWarning className="antialiased">
         
         <script
           type="application/ld+json"
@@ -123,7 +113,13 @@ export default function RootLayout({
         />
 
         <AuthProvider>
-          <AppProvider>
+          <AppProvider
+            initialAppConfig={shellData.appConfig}
+            initialHomePopup={shellData.homePopup}
+            initialVisibleCategories={shellData.visibleCategories}
+            initialCustomMenus={shellData.customMenus}
+            initialHasShockSales={shellData.hasShockSales}
+          >
             <ClientLayout>{children}</ClientLayout>
           </AppProvider>
         </AuthProvider>

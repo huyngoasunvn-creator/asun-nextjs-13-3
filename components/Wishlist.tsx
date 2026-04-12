@@ -5,6 +5,7 @@ import React from 'react';
 import { useApp } from '../store/AppContext';
 import Link from 'next/link';
 import { createSlug } from '../utils/seo';
+import SmartImage from './SmartImage';
 
 const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
   return (
@@ -36,7 +37,7 @@ const Wishlist: React.FC = () => {
           {wishlistedProducts.map(product => (
             <div key={product.id} className="group bg-white border border-slate-100 hover:border-[#ee4d2d] hover:shadow-2xl transition-all duration-500 flex flex-col h-full relative overflow-hidden rounded-sm">
                 <Link href={`/product/${createSlug(product.name, product.id)}`} className="block relative aspect-square overflow-hidden bg-white">
-                  <img src={product.images[0]} className="w-full h-full object-contain p-2 group-hover:scale-105 transition-all duration-700" />
+                  <SmartImage src={product.images[0]} widthHint={480} heightHint={480} fit="fit" sizes="(max-width: 768px) 50vw, 20vw" className="w-full h-full object-contain p-2 group-hover:scale-105 transition-all duration-700" alt={product.name} />
                 </Link>
                 <div className="p-4 flex-grow flex flex-col justify-between space-y-3">
                   <h3 className="text-xs font-bold text-slate-700 line-clamp-2 leading-tight h-10 group-hover:text-[#ee4d2d] transition-colors">{product.name}</h3>

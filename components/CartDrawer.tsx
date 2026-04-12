@@ -4,6 +4,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '../store/AppContext';
+import SmartImage from './SmartImage';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -93,7 +94,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                         />
                       </div>
                       <div className="w-20 h-20 bg-white border rounded-sm overflow-hidden shrink-0 flex items-center justify-center">
-                        <img src={item.images[0]} className="max-w-full max-h-full object-contain p-1" alt={item.name} />
+                        <SmartImage src={item.images[0]} widthHint={160} heightHint={160} fit="fit" sizes="80px" className="max-w-full max-h-full object-contain p-1" alt={item.name} />
                       </div>
                       <div className="flex-1 min-w-0 space-y-1">
                         <h4 className="text-xs font-bold text-slate-800 line-clamp-1 uppercase tracking-tight">{item.name}</h4>

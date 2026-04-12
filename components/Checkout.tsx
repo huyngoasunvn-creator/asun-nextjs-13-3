@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useApp } from '../store/AppContext';
 import { useAuth } from '../store/AuthContext';
 import { InvoiceData, Coupon, Product } from '../types';
+import SmartImage from './SmartImage';
 
 const Checkout: React.FC = () => {
   const { cart, products, placeOrder, coupons, appConfig, userSavedCouponCodes } = useApp();
@@ -264,7 +265,7 @@ const Checkout: React.FC = () => {
                   {selectedItems.map((item, idx) => (
                     <div key={idx} className="space-y-2 pb-4 border-b last:border-none border-slate-50">
                        <div className="flex gap-3">
-                          <img src={item.images[0]} className="w-14 h-14 object-cover border rounded-sm shrink-0" />
+                          <SmartImage src={item.images[0]} widthHint={112} heightHint={112} sizes="56px" className="w-14 h-14 object-cover border rounded-sm shrink-0" alt={item.name} />
                           <div className="flex-1 min-w-0">
                              <h4 className="text-[11px] font-black text-slate-800 uppercase leading-tight truncate">{item.name}</h4>
                              <div className="flex justify-between items-center mt-1">

@@ -13,6 +13,30 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1
     },
     {
+      url: `${baseUrl}/blog`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.9
+    },
+    {
+      url: `${baseUrl}/flash-sales`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.8
+    },
+    {
+      url: `${baseUrl}/promotions`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.8
+    },
+    {
+      url: `${baseUrl}/shock-sales`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.8
+    },
+    {
       url: `${baseUrl}/sitemap-products.xml`,
       lastModified: new Date()
     },

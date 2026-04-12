@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import ProductList from "@/components/ProductList";
+import { getHomePageData } from "@/services/publicStore";
 
 const baseUrl =
   process.env.NEXT_PUBLIC_SITE_URL || "https://asun.vn";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
 
@@ -57,7 +60,8 @@ export const metadata: Metadata = {
   }
 };
 
-export default function Home() {
+export default async function Home() {
+  const homeData = await getHomePageData();
 
   const schema = {
     "@context": "https://schema.org",
@@ -76,7 +80,16 @@ export default function Home() {
         }}
       />
 
-      <ProductList />
+      <ProductList
+        initialProducts={homeData.products}
+        initialBanners={homeData.banners}
+        initialCoupons={homeData.coupons}
+        initialBrands={homeData.brands}
+        initialCommitments={homeData.commitments}
+        initialCategoryConfigs={homeData.categoryConfigs}
+        initialCategoryThemes={homeData.categoryThemes}
+        initialVisibleCategories={homeData.visibleCategories}
+      />
     </>
   );
 }

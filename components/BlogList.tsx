@@ -3,21 +3,29 @@
 import React from 'react';
 import { useApp } from '../store/AppContext';
 import Link from 'next/link';
-import { createSlug } from '../utils/seo';
+import { BlogPost } from '../types';
+import SmartImage from './SmartImage';
 
-const BlogList: React.FC = () => {
+type BlogListProps = {
+  initialPosts?: BlogPost[];
+};
+
+const BlogList: React.FC<BlogListProps> = ({ initialPosts = [] }) => {
   const { blogPosts } = useApp();
-  const publishedPosts = blogPosts.filter(p => p.isPublished);
+  const sourcePosts = initialPosts.length > 0 ? initialPosts : blogPosts;
+  const publishedPosts = sourcePosts
+    .filter((p) => p.isPublished)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700 blog-font">
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
       <div className="bg-slate-900 rounded-sm p-8 md:p-16 overflow-hidden shadow-2xl border-b-4 border-[#ee4d2d] text-center relative">
         <div className="absolute inset-0 opacity-20">
-           <img src="https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=1200&auto=format&fit=crop" className="w-full h-full object-cover" />
+           <SmartImage src="https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=1200&auto=format&fit=crop" widthHint={1400} heightHint={600} priority className="w-full h-full object-cover" alt="Không gian sáng tạo cho chuyên mục blog" />
         </div>
         <div className="relative z-10 space-y-4">
-          <h1 className="text-4xl md:text-6xl font-black text-white italic tracking-tighter uppercase">KỸ NĂNG & MẸO VẶT</h1>
-          <p className="text-white/60 text-xs md:text-sm font-bold uppercase tracking-[0.3em]">Cập nhật xu hướng công nghệ & đời sống</p>
+          <h1 className="blog-title-vn text-4xl md:text-6xl font-bold text-white uppercase">KỸ NĂNG & MẸO VẶT</h1>
+          <p className="blog-kicker text-white/60 text-xs md:text-sm font-bold uppercase">Cập nhật xu hướng công nghệ & đời sống</p>
         </div>
       </div>
 
@@ -31,7 +39,7 @@ const BlogList: React.FC = () => {
           publishedPosts.map(post => (
             <Link key={post.id} href={`/blog/${post.slug}-${post.id}`} className="group bg-white border rounded-sm overflow-hidden hover:shadow-2xl transition-all duration-500 flex flex-col h-full shadow-sm">
               <div className="aspect-video overflow-hidden relative">
-                <img src={post.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
+                <SmartImage src={post.image} widthHint={720} heightHint={405} sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" alt={post.title} />
                 <div className="absolute top-4 left-4">
                    <span className="px-3 py-1 bg-[#ee4d2d] text-white text-[9px] font-black uppercase tracking-widest shadow-lg">{post.category}</span>
                 </div>
@@ -42,7 +50,7 @@ const BlogList: React.FC = () => {
                      <span className="flex items-center gap-1.5"><i className="fa-solid fa-calendar"></i> {new Date(post.createdAt).toLocaleDateString('vi-VN')}</span>
                      <span className="flex items-center gap-1.5"><i className="fa-solid fa-eye"></i> {post.views} lượt xem</span>
                   </div>
-                  <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#ee4d2d] transition-colors leading-snug line-clamp-2">
+                  <h3 className="blog-title-vn text-xl font-semibold text-slate-900 group-hover:text-[#ee4d2d] transition-colors leading-tight line-clamp-2">
   {post.title}
 </h3>
                   <p className="text-slate-500 text-sm leading-relaxed line-clamp-3">{post.excerpt}</p>

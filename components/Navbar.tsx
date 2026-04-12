@@ -7,6 +7,7 @@ import { useApp } from '../store/AppContext';
 import { useAuth } from '../store/AuthContext';
 import { Category } from '../types';
 import AuthModal from './AuthModal';
+import SmartImage from './SmartImage';
 
 interface NavbarProps {
   onCartClick: () => void;
@@ -16,7 +17,7 @@ const Navbar: React.FC<NavbarProps> = ({ onCartClick }) => {
   const { 
     cart, wishlist, searchQuery, setSearchQuery, 
     recentSearches, addRecentSearch, notifications, markNotificationAsRead, clearNotifications,
-    setActiveCategory, setSelectedBrand, appConfig, products, customMenus, visibleCategories
+    setActiveCategory, setSelectedBrand, appConfig, customMenus, visibleCategories, hasShockSales
   } = useApp();
   
   const { user, isAdmin, logout } = useAuth();
@@ -35,8 +36,6 @@ const Navbar: React.FC<NavbarProps> = ({ onCartClick }) => {
   const unreadCount = notifications.filter(n => !n.isRead).length;
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const wishlistCount = wishlist.length;
-
-  const hasShockSales = products.some(p => p.isShockSale);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -90,7 +89,7 @@ const Navbar: React.FC<NavbarProps> = ({ onCartClick }) => {
     if (appConfig.logoUrl) {
       return (
         <div className="h-10 md:h-14 flex items-center relative z-10">
-          <img src={appConfig.logoUrl} className="h-full object-contain" style={{
+          <SmartImage src={appConfig.logoUrl} widthHint={220} heightHint={72} fit="fit" priority className="h-full object-contain" style={{
               transform: `translate(${appConfig.logoX || 0}px, ${appConfig.logoY || 0}px) scale(${appConfig.logoScale || 1})`,
               transformOrigin: 'center center',
               maxWidth: 'none'
@@ -153,7 +152,7 @@ const Navbar: React.FC<NavbarProps> = ({ onCartClick }) => {
                       <button onClick={clearNotifications} className="text-[9px] font-black text-[#ee4d2d] uppercase hover:underline">Xóa tất cả</button>
                     </div>
                     <div className="max-h-96 overflow-y-auto custom-scrollbar">
-                      {notifications.length === 0 ? <div className="p-10 text-center space-y-2 opacity-40"><i className="fa-solid fa-bell-slash text-2xl"></i><p className="text-[10px] font-bold uppercase">Không có thông báo</p></div> : notifications.map(n => (<div key={n.id} onClick={() => {markNotificationAsRead(n.id); router.push(n.link); setShowNotifPanel(false);}} className={`p-4 flex gap-3 cursor-pointer hover:bg-slate-50 transition-colors border-b last:border-none ${!n.isRead ? 'bg-orange-50/50' : ''}`}>{n.image ? <img src={n.image} className="w-12 h-12 object-cover rounded-sm" /> : <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0"><i className="fa-solid fa-tag"></i></div>}<div className="space-y-1"><h4 className="text-xs font-black leading-tight">{n.title}</h4><p className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed">{n.message}</p></div></div>))}
+                      {notifications.length === 0 ? <div className="p-10 text-center space-y-2 opacity-40"><i className="fa-solid fa-bell-slash text-2xl"></i><p className="text-[10px] font-bold uppercase">Không có thông báo</p></div> : notifications.map(n => (<div key={n.id} onClick={() => {markNotificationAsRead(n.id); router.push(n.link); setShowNotifPanel(false);}} className={`p-4 flex gap-3 cursor-pointer hover:bg-slate-50 transition-colors border-b last:border-none ${!n.isRead ? 'bg-orange-50/50' : ''}`}>{n.image ? <SmartImage src={n.image} widthHint={96} heightHint={96} sizes="48px" className="w-12 h-12 object-cover rounded-sm" alt={n.title} /> : <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0"><i className="fa-solid fa-tag"></i></div>}<div className="space-y-1"><h4 className="text-xs font-black leading-tight">{n.title}</h4><p className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed">{n.message}</p></div></div>))}
                     </div>
                   </div>
                 )}

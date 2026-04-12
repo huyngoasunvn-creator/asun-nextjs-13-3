@@ -1,31 +1,38 @@
-   'use client';
+'use client';
 
 import React, { useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useApp } from '../store/AppContext';
-import { createSlug } from '../utils/seo';
+import { BlogPost } from '../types';
+import SmartImage from './SmartImage';
 
-const BlogDetail: React.FC = () => {
+const BlogDetail: React.FC<{ initialBlog?: BlogPost | null }> = ({ initialBlog = null }) => {
   const params = useParams();
   const slug = params?.slug as string;
-  const { blogPosts, products, incrementBlogPostViews } = useApp();
+  const { incrementBlogPostViews } = useApp();
 
   const post = useMemo(() => {
+    if (initialBlog) return initialBlog;
     if (!slug) return null;
-    return blogPosts.find(p => slug.endsWith(p.id));
-  }, [slug, blogPosts]);
+    return null;
+  }, [initialBlog, slug]);
 
   useEffect(() => {
     if (!post) return;
+    const viewKey = `asun_blog_view_${post.id}`;
+
+    try {
+      const lastViewedAt = localStorage.getItem(viewKey);
+      if (lastViewedAt && Date.now() - Number(lastViewedAt) < 24 * 60 * 60 * 1000) {
+        return;
+      }
+
+      localStorage.setItem(viewKey, String(Date.now()));
+    } catch {}
+
     incrementBlogPostViews(post.id);
   }, [post, incrementBlogPostViews]);
-
-
-  const relatedProducts = useMemo(() => {
-    if (!post?.relatedProductIds) return [];
-    return products.filter(p => post.relatedProductIds.includes(p.id));
-  }, [post, products]);
 
   const getEmbedUrl = (url: string) => {
     if (!url) return '';
@@ -51,7 +58,7 @@ const BlogDetail: React.FC = () => {
   const embedVideoUrl = post.videoUrl ? getEmbedUrl(post.videoUrl) : '';
 
   return (
-    <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in duration-500 blog-font">
+    <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in duration-500">
       <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
         <Link href="/" className="hover:text-[#ee4d2d]">Trang chủ</Link>
         <i className="fa-solid fa-chevron-right text-[8px]"></i>
@@ -63,7 +70,7 @@ const BlogDetail: React.FC = () => {
       <article className="space-y-8 bg-white p-6 md:p-12 border rounded-sm shadow-sm">
         <header className="space-y-4 text-center">
            <span className="px-4 py-1 bg-[#ee4d2d] text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full">{post.category}</span>
-           <h1 className="text-3xl md:text-5xl font-extrabold text-slate-900 leading-snug tracking-tight">
+           <h1 className="blog-title-vn text-3xl md:text-5xl font-semibold text-slate-900 leading-tight">
   {post.title}
 </h1>
            <div className="flex items-center justify-center gap-6 text-[11px] font-black text-slate-400 uppercase tracking-widest border-y border-slate-50 py-4">
@@ -85,12 +92,12 @@ const BlogDetail: React.FC = () => {
           </div>
         ) : (
           <div className="aspect-video rounded-sm overflow-hidden shadow-2xl border-4 border-white">
-             <img src={post.image} className="w-full h-full object-cover" alt={post.title} />
+             <SmartImage src={post.image} widthHint={1200} heightHint={675} priority sizes="100vw" className="w-full h-full object-cover" alt={post.title} />
           </div>
         )}
 
         <div 
-          className="rich-text-content prose prose-slate prose-lg max-w-none text-slate-700 leading-relaxed font-medium prose-h2:text-[#ee4d2d] prose-h2:italic prose-h2:uppercase prose-h2:tracking-tight prose-strong:text-slate-900 prose-strong:font-black prose-img:rounded-sm prose-img:shadow-xl prose-a:text-[#ee4d2d] prose-a:font-black prose-a:no-underline hover:prose-a:underline transition-all"
+          className="rich-text-content prose prose-slate prose-lg max-w-none text-slate-700 leading-relaxed font-medium prose-h2:text-[#ee4d2d] prose-strong:text-slate-900 prose-strong:font-black prose-img:rounded-sm prose-img:shadow-xl prose-a:text-[#ee4d2d] prose-a:font-black prose-a:no-underline hover:prose-a:underline transition-all"
           dangerouslySetInnerHTML={{ __html: post.content }}
         ></div>
       </article>

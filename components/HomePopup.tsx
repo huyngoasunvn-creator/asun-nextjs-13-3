@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useApp } from '../store/AppContext';
+import SmartImage from './SmartImage';
 
 const HomePopup: React.FC = () => {
   const { homePopup } = useApp();
@@ -72,8 +73,11 @@ const HomePopup: React.FC = () => {
           onClick={handleAction}
           className="cursor-pointer group relative overflow-hidden aspect-[4/5] md:aspect-auto md:min-h-[400px]"
         >
-          <img 
+          <SmartImage 
             src={homePopup.imageUrl} 
+            widthHint={900}
+            heightHint={1125}
+            priority
             className="w-full h-full object-cover transition-transform duration-[2000ms] group-hover:scale-110" 
             alt="Promotion" 
           />

@@ -1,10 +1,15 @@
 @import "tailwindcss";
 @import "remixicon/fonts/remixicon.css";
 
+:root {
+  --font-sans: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-serif: "Palatino Linotype", "Book Antiqua", Constantia, Georgia, "Times New Roman", serif;
+}
+
 @layer base {
   body {
     @apply bg-slate-50 text-slate-900;
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-sans);
   }
 }
 
@@ -32,14 +37,20 @@
   }
   
   .rich-text-content h2 {
+    font-family: var(--font-serif);
     font-size: 1.5rem;
-    font-weight: 800;
+    font-weight: 700;
+    font-style: normal;
+    letter-spacing: -0.02em;
     margin-top: 1.5rem;
     margin-bottom: 0.75rem;
   }
   .rich-text-content h3 {
+    font-family: var(--font-serif);
     font-size: 1.25rem;
     font-weight: 700;
+    font-style: normal;
+    letter-spacing: -0.015em;
     margin-top: 1.25rem;
     margin-bottom: 0.5rem;
   }
@@ -48,9 +59,28 @@
     line-height: 1.7;
   }
   .blog-font {
-    font-family: 'Merriweather', serif;
+    font-family: var(--font-serif);
   }
-}
+  .blog-display {
+    font-family: var(--font-serif);
+    font-kerning: normal;
+    font-variant-ligatures: common-ligatures;
+    text-rendering: optimizeLegibility;
+  }
+  .blog-title-vn {
+    font-family: var(--font-serif);
+    font-style: normal;
+    letter-spacing: -0.025em;
+    font-kerning: normal;
+    text-rendering: optimizeLegibility;
+  }
+  .blog-kicker {
+    letter-spacing: 0.18em;
+  }
+  .rich-text-content {
+    font-family: var(--font-sans);
+  }
+  }
 
 @keyframes pulse-slow {
   0%, 100% { opacity: 1; transform: scale(1); }
@@ -59,4 +89,18 @@
 
 .animate-pulse-slow {
   animation: pulse-slow 3s infinite ease-in-out;
+}
+@keyframes fade {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade {
+  animation: fade 0.8s ease;
 }

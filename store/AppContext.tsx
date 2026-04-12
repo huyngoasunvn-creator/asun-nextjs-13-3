@@ -2,6 +2,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import { 
   collection, 
   doc, 
@@ -75,6 +76,7 @@ interface AppContextType {
   selectedBrand: string | null;
   setSelectedBrand: (brand: string | null) => void;
   visibleCategories: Category[];
+  hasShockSales: boolean;
   isAdmin: boolean;
   setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
   addToCart: (product: Product, selectedVariants?: Record<string, string>) => void;
@@ -151,9 +153,45 @@ const DEFAULT_HOME_POPUP: HomePopup = {
 
 const CART_STORAGE_KEY = 'asun_cart_v3';
 const WISHLIST_STORAGE_KEY = 'asun_wishlist_v3';
+const COLLECTION_SYNC_TTL_MS = 10 * 60 * 1000;
 
-export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const getCollectionSyncKey = (collectionName: string) => `asun_sync_${collectionName}`;
+
+const shouldRefreshCollection = (collectionName: string) => {
+  try {
+    const lastSyncedAt = localStorage.getItem(getCollectionSyncKey(collectionName));
+    if (!lastSyncedAt) return true;
+    return Date.now() - Number(lastSyncedAt) > COLLECTION_SYNC_TTL_MS;
+  } catch {
+    return true;
+  }
+};
+
+const markCollectionRefreshed = (collectionName: string) => {
+  try {
+    localStorage.setItem(getCollectionSyncKey(collectionName), String(Date.now()));
+  } catch {}
+};
+
+interface AppProviderProps {
+  children: React.ReactNode;
+  initialAppConfig?: AppConfig;
+  initialHomePopup?: HomePopup;
+  initialVisibleCategories?: Category[];
+  initialCustomMenus?: CustomMenu[];
+  initialHasShockSales?: boolean;
+}
+
+export const AppProvider: React.FC<AppProviderProps> = ({
+  children,
+  initialAppConfig = DEFAULT_APP_CONFIG,
+  initialHomePopup = DEFAULT_HOME_POPUP,
+  initialVisibleCategories = Object.values(Category),
+  initialCustomMenus = [],
+  initialHasShockSales = false,
+}) => {
   const { user } = useAuth();
+  const pathname = usePathname();
   const [products, setProducts] = useState<Product[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -163,25 +201,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [commitments, setCommitments] = useState<Commitment[]>([]);
-  const [customMenus, setCustomMenus] = useState<CustomMenu[]>([]);
+  const [customMenus, setCustomMenus] = useState<CustomMenu[]>(initialCustomMenus);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
-  const [appConfig, setAppConfig] = useState<AppConfig>(DEFAULT_APP_CONFIG);
-  const [homePopup, setHomePopup] = useState<HomePopup>(DEFAULT_HOME_POPUP);
+  const [appConfig, setAppConfig] = useState<AppConfig>(initialAppConfig);
+  const [homePopup, setHomePopup] = useState<HomePopup>(initialHomePopup);
   const [categoryConfigs, setCategoryConfigs] = useState<CategoryConfig[]>([]);
   const [categoryThemes, setCategoryThemes] = useState<CategoryTheme[]>([]);
   const [stockAlerts, setStockAlerts] = useState<StockAlert[]>([]);
   const [userSavedCouponCodes, setUserSavedCouponCodes] = useState<string[]>([]);
+  const [hasShockSales, setHasShockSales] = useState(initialHasShockSales);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [activeCategory, setActiveCategory] = useState<Category | 'Tất cả'>('Tất cả');
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
-  const [visibleCategories, setVisibleCategories] = useState<Category[]>(Object.values(Category));
+  const [visibleCategories, setVisibleCategories] = useState<Category[]>(initialVisibleCategories);
   const [isAdmin, setIsAdmin] = useState(false);
   const [alertProduct, setAlertProduct] = useState<Product | null>(null);
 
   const isInitialOrdersLoad = useRef(true);
+  const shouldLoadAdminData = pathname.startsWith('/admin');
+  const shouldLoadProducts =
+    pathname.startsWith('/wishlist') ||
+    shouldLoadAdminData;
+  const shouldLoadHomeCollections = shouldLoadAdminData;
+  const shouldLoadCoupons = pathname.startsWith('/checkout') || shouldLoadAdminData;
+  const shouldLoadBlogPosts = shouldLoadAdminData;
+  const shouldLoadReviews = shouldLoadAdminData;
+  const shouldLoadOrders = pathname.startsWith('/orders') || shouldLoadAdminData;
+  const shouldLoadShellRealtime = shouldLoadAdminData;
+  const shouldLoadCustomMenus = shouldLoadAdminData;
 
   // --- HÀM HELPER FETCH DỮ LIỆU AN TOÀN ---
 
@@ -192,11 +242,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (cacheSnap && !cacheSnap.empty) {
         setter(cacheSnap.docs.map(d => d.data()));
       }
+      const shouldFetchServer = !cacheSnap || cacheSnap.empty || shouldRefreshCollection(collectionName);
+      if (!shouldFetchServer) return;
+
       const serverSnap = await getDocsFromServer(q);
       if (!serverSnap.empty) {
         setter(serverSnap.docs.map(d => d.data()));
+        markCollectionRefreshed(collectionName);
       } else if (!cacheSnap || cacheSnap.empty) {
         setter(fallback);
+        markCollectionRefreshed(collectionName);
       }
     } catch (e) {
       console.error(`Sync ${collectionName} error:`, e);
@@ -204,6 +259,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   useEffect(() => {
+    if (!shouldLoadShellRealtime) return;
+
     const unsubConfig = onSnapshot(doc(db, "settings", "appConfig"), (s) => {
       if (s.exists()) setAppConfig(s.data() as AppConfig);
     });
@@ -214,26 +271,69 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (s.exists()) setVisibleCategories(s.data().visibleCategories as Category[]);
     });
     return () => { unsubConfig(); unsubPopup(); unsubCats(); };
-  }, []);
+  }, [shouldLoadShellRealtime]);
 
   useEffect(() => {
-    syncCollection("products", (data: Product[]) => setProducts(data.length > 0 ? data : INITIAL_PRODUCTS));
-    syncCollection("banners", setBanners);
-    syncCollection("brands", setBrands);
-    syncCollection("commitments", setCommitments);
-    syncCollection("categoryConfigs", setCategoryConfigs);
-    syncCollection("categoryThemes", setCategoryThemes);
-    syncCollection("coupons", setCoupons);
+    if (shouldLoadProducts) {
+      syncCollection("products", (data: Product[]) => setProducts(data.length > 0 ? data : INITIAL_PRODUCTS));
+    }
+    if (shouldLoadHomeCollections) {
+      syncCollection("banners", setBanners);
+      syncCollection("brands", setBrands);
+      syncCollection("commitments", setCommitments);
+      syncCollection("categoryConfigs", setCategoryConfigs);
+      syncCollection("categoryThemes", setCategoryThemes);
+    }
+    if (shouldLoadCoupons) {
+      syncCollection("coupons", setCoupons);
+    }
+    if (shouldLoadCustomMenus) {
+      syncCollection("customMenus", setCustomMenus);
+    }
+  }, [shouldLoadCoupons, shouldLoadCustomMenus, shouldLoadHomeCollections, shouldLoadProducts]);
+
+  useEffect(() => {
+    if (!products.length) return;
+    setHasShockSales(products.some((product) => product.isShockSale && !product.isHidden));
+  }, [products]);
+
+  useEffect(() => {
+    if (!shouldLoadBlogPosts) return;
     syncCollection("blogPosts", setBlogPosts);
-    syncCollection("customMenus", setCustomMenus);
-    
-    getDocs(query(collection(db, "reviews"), orderBy("createdAt", "desc"))).then(s => {
-      setReviews(s.docs.map(d => d.data() as Review));
-    }).catch(() => {});
-  }, []);
+  }, [shouldLoadBlogPosts]);
 
   useEffect(() => {
-    if (user?.email === "admin@droppii.vn") {
+    if (!shouldLoadReviews) return;
+
+    const reviewsQuery = query(collection(db, "reviews"), orderBy("createdAt", "desc"));
+    getDocsFromCache(reviewsQuery)
+      .then(s => {
+        if (!s.empty) {
+          setReviews(s.docs.map(d => d.data() as Review));
+        }
+
+        if (s.empty || shouldRefreshCollection("reviews")) {
+          return getDocsFromServer(reviewsQuery).then(serverSnap => {
+            setReviews(serverSnap.docs.map(d => d.data() as Review));
+            markCollectionRefreshed("reviews");
+          });
+        }
+      })
+      .catch(() => {
+        getDocsFromServer(reviewsQuery).then(serverSnap => {
+          setReviews(serverSnap.docs.map(d => d.data() as Review));
+          markCollectionRefreshed("reviews");
+        }).catch(() => {});
+      });
+  }, [shouldLoadReviews]);
+
+  useEffect(() => {
+    if (!shouldLoadOrders) {
+      setOrders([]);
+      return;
+    }
+
+    if (user?.email === "admin@droppii.vn" && shouldLoadAdminData) {
       const unsubOrders = onSnapshot(query(collection(db, "orders"), orderBy("date", "desc")), (snap) => {
         const orderList = snap.docs.map(doc => doc.data() as Order);
         
@@ -271,7 +371,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
       return () => unsub();
     }
-  }, [user]);
+  }, [user, shouldLoadOrders]);
 
   useEffect(() => {
     try {
@@ -298,7 +398,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const cloudWish = userSnap.data().wishlist || [];
         const merged = Array.from(new Set([...wishlist, ...cloudWish]));
         setWishlist(merged);
-        await updateDoc(userRef, { wishlist: merged });
+        if (merged.length !== cloudWish.length) {
+          await updateDoc(userRef, { wishlist: merged });
+        }
       } else {
         await setDoc(userRef, { wishlist: wishlist, email: user.email });
       }
@@ -307,14 +409,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [user]);
 
   const saveProduct = async (product: Product) => {
-    const data = cleanData(product);
-    await setDoc(doc(db, "products", product.id), data);
-    setProducts(prev => {
-      const exists = prev.find(p => p.id === product.id);
-      if (exists) return prev.map(p => p.id === product.id ? product : p);
-      return [product, ...prev];
-    });
-  };
+  const data = cleanData(product);
+
+  await setDoc(doc(db, "products", product.id), data, {
+    merge: true, // 👈 QUAN TRỌNG
+  });
+
+  setProducts(prev => {
+    const exists = prev.find(p => p.id === product.id);
+    if (exists) return prev.map(p => p.id === product.id ? data : p);
+    return [product, ...prev];
+  });
+};
 
   const toggleWishlist = async (productId: string) => {
     const newWishlist = wishlist.includes(productId) 
@@ -338,14 +444,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       await updateDoc(orderRef, { reviewedProductIds: arrayUnion(review.productId) });
     }
     const productRef = doc(db, "products", review.productId);
-    const prodSnap = await getDoc(productRef);
-    if (prodSnap.exists()) {
-      const currentProdReviews = reviews.filter(r => r.productId === review.productId);
-      const totalRatingCount = currentProdReviews.length + 1;
-      const totalRatingSum = currentProdReviews.reduce((sum, r) => sum + r.rating, 0) + review.rating;
-      const newRating = totalRatingSum / totalRatingCount;
-      await updateDoc(productRef, { rating: Number(newRating.toFixed(1)) });
-    }
+    const currentProdReviews = reviews.filter(r => r.productId === review.productId);
+    const totalRatingCount = currentProdReviews.length + 1;
+    const totalRatingSum = currentProdReviews.reduce((sum, r) => sum + r.rating, 0) + review.rating;
+    const newRating = totalRatingSum / totalRatingCount;
+    await updateDoc(productRef, { rating: Number(newRating.toFixed(1)) }).catch(() => {});
   };
 
   const deleteReview = async (reviewId: string) => {
@@ -560,7 +663,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   return (
     <AppContext.Provider value={{
       products, brands, cart, wishlist, orders, reviews, blogPosts, banners, commitments, customMenus, appConfig, homePopup, coupons, notifications, categoryConfigs, categoryThemes, stockAlerts, searchQuery, setSearchQuery, 
-      recentSearches, addRecentSearch, activeCategory, setActiveCategory, selectedBrand, setSelectedBrand, visibleCategories, isAdmin,
+      recentSearches, addRecentSearch, activeCategory, setActiveCategory, selectedBrand, setSelectedBrand, visibleCategories, hasShockSales, isAdmin,
       setProducts, addToCart, removeFromCart, updateCartQuantity, toggleCartItemSelection, toggleAllCartItems, toggleWishlist,
       clearCart, toggleAdmin, placeOrder, updateOrderStatus, deleteProduct, saveProduct, saveBanner, deleteBanner, 
       saveBrand, deleteBrand, saveCoupon, deleteCoupon, saveCommitment, deleteCommitment, saveCustomMenu, deleteCustomMenu, saveCategoryConfig, saveCategoryTheme,

@@ -1,15 +1,11 @@
-
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-// Correct named imports from modular SDK
-import { 
-  onAuthStateChanged, 
-  signOut 
-} from "firebase/auth";
-// Importing User type separately to ensure compatibility in some TS environments
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import type { User } from "firebase/auth";
+
 import { auth } from "../services/firebaseClient";
+import { isAdminEmail } from "../utils/admin";
 
 interface AuthContextType {
   user: User | null;
@@ -26,15 +22,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // Subscribing to auth state using modular SDK function
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      // Cấu hình email có quyền Admin cao nhất
-      if (currentUser && currentUser.email === 'admin@droppii.vn') {
-        setIsAdmin(true);
-      } else {
-        setIsAdmin(false);
-      }
+      setIsAdmin(isAdminEmail(currentUser?.email));
       setLoading(false);
     });
 
@@ -42,7 +32,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const logout = async () => {
-    // Calling modular signOut
     await signOut(auth);
   };
 
@@ -55,8 +44,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
+
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
+
   return context;
 };

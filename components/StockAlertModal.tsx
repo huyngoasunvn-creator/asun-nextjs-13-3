@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import { useApp } from '../store/AppContext';
+import SmartImage from './SmartImage';
 
 const StockAlertModal: React.FC = () => {
   const { alertProduct, setAlertProduct, addStockAlert } = useApp();
@@ -64,7 +65,7 @@ const StockAlertModal: React.FC = () => {
           ) : (
             <>
               <div className="flex gap-4 items-start bg-slate-50 p-3 border rounded-sm">
-                <img src={alertProduct.images[0]} className="w-14 h-14 object-cover rounded-sm border bg-white" alt={alertProduct.name} />
+                <SmartImage src={alertProduct.images[0]} widthHint={112} heightHint={112} sizes="56px" className="w-14 h-14 object-cover rounded-sm border bg-white" alt={alertProduct.name} />
                 <div className="min-w-0">
                   <h4 className="text-xs font-bold text-slate-800 line-clamp-2 leading-tight mb-1">{alertProduct.name}</h4>
                   <span className="text-[10px] font-black text-[#ee4d2d] uppercase italic">₫{alertProduct.price.toLocaleString()}</span>

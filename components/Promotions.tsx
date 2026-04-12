@@ -6,9 +6,15 @@ import { useApp } from '../store/AppContext';
 import Link from 'next/link';
 import { Product } from '../types';
 import { createSlug } from '../utils/seo';
+import SmartImage from './SmartImage';
 
-const Promotions: React.FC = () => {
+type PromotionsProps = {
+  initialProducts?: Product[];
+};
+
+const Promotions: React.FC<PromotionsProps> = ({ initialProducts = [] }) => {
   const { products } = useApp();
+  const sourceProducts = products.length > 0 ? products : initialProducts;
   const now = new Date();
   
   const isGiftActive = (p: Product) => {
@@ -25,7 +31,7 @@ const Promotions: React.FC = () => {
     return true;
   };
 
-  const promoProducts = products.filter(p => (isGiftActive(p) || isBuyXGetYActive(p)) && !p.isOutOfStock);
+  const promoProducts = sourceProducts.filter(p => !p.isHidden && (isGiftActive(p) || isBuyXGetYActive(p)) && !p.isOutOfStock);
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
@@ -55,7 +61,7 @@ const Promotions: React.FC = () => {
                       {buyXGetY ? `Mua ${product.promoBuyQty} Tặng ${product.promoGetQty}` : product.giftName}
                     </h3>
                     <div className="flex items-center gap-2 mt-2">
-                        <img src={product.images[0]} className="w-10 h-10 object-cover rounded-sm border" />
+                        <SmartImage src={product.images[0]} widthHint={80} heightHint={80} sizes="40px" className="w-10 h-10 object-cover rounded-sm border" alt={product.name} />
                         <span className="text-xs font-bold text-slate-700 truncate">{product.name}</span>
                     </div>
                   </div>

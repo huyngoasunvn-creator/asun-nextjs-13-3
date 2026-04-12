@@ -5,6 +5,8 @@ import React, { useMemo } from 'react';
 import { useApp } from '../store/AppContext';
 import Link from 'next/link';
 import { createSlug } from '../utils/seo';
+import { Product } from '../types';
+import SmartImage from './SmartImage';
 
 const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
   return (
@@ -17,14 +19,19 @@ const StarRating: React.FC<{ rating: number }> = ({ rating }) => {
   );
 };
 
-const ShockSales: React.FC = () => {
-  const { products, addToCart, wishlist, toggleWishlist } = useApp();
+type ShockSalesProps = {
+  initialProducts?: Product[];
+};
+
+const ShockSales: React.FC<ShockSalesProps> = ({ initialProducts = [] }) => {
+  const { products, addToCart } = useApp();
+  const sourceProducts = products.length > 0 ? products : initialProducts;
   
   const shockSaleProducts = useMemo(() => {
-    return products
+    return sourceProducts
       .filter(p => !p.isHidden && p.isShockSale && p.shockSalePrice)
       .sort((a, b) => (a.isOutOfStock ? 1 : 0) - (b.isOutOfStock ? 1 : 0));
-  }, [products]);
+  }, [sourceProducts]);
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-700">
@@ -47,7 +54,7 @@ const ShockSales: React.FC = () => {
               return (
                 <div key={product.id} className="group bg-white border-2 border-transparent hover:border-purple-600 hover:shadow-2xl transition-all duration-500 flex flex-col h-full relative overflow-hidden rounded-sm shadow-sm">
                   <Link href={`/product/${createSlug(product.name, product.id)}`} className="block relative aspect-square overflow-hidden bg-white">
-                    <img src={product.images[0]} className="w-full h-full object-contain p-4 group-hover:scale-105 transition-all duration-700" />
+                    <SmartImage src={product.images[0]} widthHint={480} heightHint={480} fit="fit" sizes="(max-width: 768px) 50vw, (max-width: 1280px) 25vw, 20vw" className="w-full h-full object-contain p-4 group-hover:scale-105 transition-all duration-700" alt={product.name} />
                     <div className="absolute top-2 left-2 z-20 flex flex-col gap-1">
                       <div className="bg-purple-600 text-white text-[9px] font-black px-2 py-0.5 uppercase italic">XẢ KHO</div>
                       <div className="bg-yellow-400 text-purple-900 text-[10px] font-black px-2 py-0.5">-{discountPercent}%</div>

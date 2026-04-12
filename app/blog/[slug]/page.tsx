@@ -1,22 +1,17 @@
 import { Metadata } from "next";
 import BlogDetail from "@/components/BlogDetail";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/services/firebaseClient";
+import { doc, getDoc } from "firebase/firestore/lite";
+import { serverDb } from "@/services/firebaseServer";
 import { notFound } from "next/navigation";
+import { BlogPost } from "@/types";
+
+export const revalidate = 300;
 
 type Props = {
   params: Promise<{ slug: string }>;
 };
 
-type Blog = {
-  id: string;
-  title: string;
-  excerpt: string;
-  image: string;
-  content?: string;
-  author?: string;
-  createdAt?: string;
-};
+type Blog = BlogPost;
 
 function getIdFromSlug(slug?: string) {
   if (!slug) return null;
@@ -33,15 +28,19 @@ async function getBlog(id?: string | null): Promise<Blog | null> {
 
   if (!id) return null;
 
-  const ref = doc(db, "blogPosts", id);
+  const ref = doc(serverDb, "blogPosts", id);
   const snap = await getDoc(ref);
 
   if (!snap.exists()) return null;
 
-  return {
+  const blog = {
     id: snap.id,
     ...(snap.data() as Omit<Blog, "id">)
   };
+
+  if (!blog.isPublished) return null;
+
+  return blog;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -172,7 +171,7 @@ export default async function BlogPage({ params }: Props) {
         }}
       />
 
-      <BlogDetail />
+      <BlogDetail initialBlog={blog} />
     </>
   );
 }
