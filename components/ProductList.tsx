@@ -29,6 +29,10 @@ const removeAccents = (str: string) => {
     .toLowerCase();
 };
 
+const formatNumberVN = (value: number) => {
+  return new Intl.NumberFormat('vi-VN').format(value);
+};
+
 const FlashSaleCountdown: React.FC<{ endTime: string }> = ({ endTime }) => {
   const [timeLeft, setTimeLeft] = useState({ h: '00', m: '00', s: '00' });
   useEffect(() => {
@@ -537,7 +541,7 @@ useEffect(() => {
                   </div>
                   <h3 className="text-[10px] font-bold text-slate-700 line-clamp-2 leading-tight h-8 mb-1.5 group-hover:text-pink-600 transition-colors">{p.name}</h3>
                   <div className="flex flex-col gap-1 mt-auto">
-                    <span className="text-xs font-black text-[#ee4d2d]">₫{p.price.toLocaleString()}</span>
+                    <span className="text-xs font-black text-[#ee4d2d]">₫{formatNumberVN(p.price)}</span>
                             <CouponIncentive product={p} coupons={sourceCoupons} />
                   </div>
                 </Link>
@@ -703,7 +707,14 @@ KHUYẾN MÃI
                     <div className="p-2.5 md:p-3 flex-grow flex flex-col justify-between space-y-1.5">
                       <div>
                         <div className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">{product.brand}</div>
-                        <h3 className="text-[12px] font-bold text-slate-700 line-clamp-2 leading-tight h-8 group-hover:text-[#ee4d2d] transition-colors">{product.name}</h3>
+                        <h3 className="text-[12px] font-bold text-slate-700 line-clamp-2 leading-tight h-8">
+                          <Link
+                            href={`/product/${createSlug(product.name, product.id)}`}
+                            className="transition-colors hover:text-[#ee4d2d]"
+                          >
+                            {product.name}
+                          </Link>
+                        </h3>
                       </div>
                       <div>
                         <div className="flex flex-col gap-0.5">
